@@ -1,14 +1,23 @@
 import numpy as np
 import random
 import matplotlib.pyplot as plt
+import logging
+import sys
 
 from environment import EmotionEnv, Emotion
 from agent import QTableAgent
 
+# Set up logging
+logger = logging.getLogger(__name__)
+stream_handler = logging.StreamHandler(sys.stdout)
+formatter = logging.Formatter('%(message)s')
+stream_handler.setFormatter(formatter)
+logger.addHandler(stream_handler)
+logger.setLevel(logging.INFO)
 
 if __name__ == '__main__':
 
-    N_RUNS = 10000
+    N_RUNS = 1000
     N_STIMULI = int(N_RUNS/2)  # Ratio of N_RUNS/N_STIMULI determines how likely agent is to re-encounter stimuli
 
     # Create a set of stimuli which the agent will encounter
@@ -20,11 +29,20 @@ if __name__ == '__main__':
     # Set parameters for environment
     env = EmotionEnv(
         engage_delay=1,
-        engage_benefit=.3,
+        engage_benefit=.6,
         disengage_benefit=.5,
-        engage_adaptation=.2,
+        engage_adaptation=.0,
         stimuli=stimuli
     )
+
+    # Print actual expected value of strategies
+    # TODO: engage EV calculation is wrong here
+    # avg_emo_length = np.mean([len(s.emo_trajectory) for s in stimuli])
+    # disengage_ev = env.disengage_benefit * avg_emo_length
+    # engage_ev = env.engage_benefit * avg_emo_length + env.engage_adaptation * N_STIMULI / N_RUNS
+    # logger.info(f'disengage expected value: {disengage_ev}')
+    # logger.info(f'engage expected value: {engage_ev}')
+
     # Set parameters for agent
     agent = QTableAgent(env.n_stimuli, env.N_ACTIONS, alpha=.001, gamma=.99, epsilon=.1)
 
@@ -37,18 +55,18 @@ if __name__ == '__main__':
     # Run simulation
     for i in range(N_RUNS):
 
-        # env.render()
-        action = agent.choose_action(state)
+        logger.debug(env.render(mode='log'))
+        action = agent.choose_action(state, policy='ucb', c=.1)
         next_state, reward, done, info = env.step(action)
         agent.update(state, next_state, action, reward)
-        # print(f'action: {action}, reward: {reward}')
-        # env.render()
+        logger.debug(f'action: {action}, reward: {reward}')
+        logger.debug(env.render(mode='log'))
 
         action_counts[i, action] += 1
         reward_counts[i, action] += reward
 
-    print(f'actions: {np.sum(action_counts, axis=0)}')
-    print(f'rewards: {np.sum(reward_counts, axis=0) / np.sum(action_counts, axis=0)}')
+    logger.info(f'actions: {np.sum(action_counts, axis=0)}')
+    logger.info(f'rewards: {np.sum(reward_counts, axis=0) / np.sum(action_counts, axis=0)}')
 
 
     # Plot choices

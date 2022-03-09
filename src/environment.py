@@ -155,7 +155,10 @@ class EmotionEnv(gym.Env):
         :param mode:
         :return:
         '''
-        if mode != 'human':
+        if mode == 'human':
+            print(f'{self.current_emotion.get_dict()}')
+        elif mode == 'log':
+            return f'{self.current_emotion.get_dict()}'
+        else:
             raise NotImplementedError()
-        print(f'{self.current_emotion.get_dict()}')
 
