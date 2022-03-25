@@ -67,13 +67,13 @@ library("readr")
   fileNameActions <- paste0(fileName, parameterName, "_actions", ".png")
   .matrix_lineplots(all_actionCumSum_data, plotTitles_actions, fileNameActions, "Cum. Sum")
   
-  plotTitles_seed_trajectories <- paste("Trajectories -", parameterName, paramterValues)
+  plotTitles_trajectories <- paste("Trajectories -", parameterName, paramterValues)
   fileNameTrajectories <- paste0(fileName, parameterName, "_trajectories", ".png")
-  .matrix_lineplots(all_actionTrajectory_data, plotTitles_seed_trajectories, fileNameTrajectories, "Emo. Intensity")
+  .matrix_lineplots(all_actionTrajectory_data, plotTitles_trajectories, fileNameTrajectories, "Emo. Intensity")
   
-  plotTitles_seed_rewards <- paste("Rewards -", parameterName, paramterValues)
+  plotTitles_rewards <- paste("Rewards -", parameterName, paramterValues)
   fileNameRewards <- paste0(fileName, parameterName, "_rewards", ".png")
-  .matrix_lineplots(all_RewardsCumMean_data, plotTitles_seed_rewards, fileNameRewards, "Cum. Mean")
+  .matrix_lineplots(all_RewardsCumMean_data, plotTitles_rewards, fileNameRewards, "Cum. Mean")
 }
 
 
