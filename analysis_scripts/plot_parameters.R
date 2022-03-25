@@ -80,8 +80,8 @@ library("readr")
 
 
 #### GET PLOTS ######
-path <- "../datasets/N_STIMULI/"
-parameterName <- "N_STIMULI"
+path <- "../datasets/engage_adaptation/"
+parameterName <- "engage_adaptation"
 .getAllPlots(path, parameterName)
 
 

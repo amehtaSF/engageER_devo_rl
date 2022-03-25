@@ -2,7 +2,13 @@
 title: "Explaining Parameters"
 author: "Jonas Petter"
 date: "3/24/2022"
-output: html_document
+output:
+  html_document:
+    toc: true
+    theme: united
+editor_options: 
+  markdown: 
+    wrap: 72
 ---
 
 ```{r setup, include=FALSE}
@@ -13,62 +19,79 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ### Current Parameters
 
-- **emo_intensity**: Property of a stimulus and of the agent's state. Scale from 0 to 10.
+-   **emo_intensity**: Property of a stimulus and of the agent's state.
+    Scale from 0 to 10.
 
-- **N_RUNS**: Number of time points the simulation has overall.
+-   **N_RUNS**: Number of time points the simulation has overall.
 
-- **N_STIMULI**: Number of uniquely identifiable stimuli that will be generated.
+-   **N_STIMULI**: Number of uniquely identifiable stimuli that will be
+    generated.
 
-- **N_ACTIONS**: Number of actions available for the agent.
+-   **N_ACTIONS**: Number of actions available for the agent.
 
-- **alpha**: The learning rate, i.e. how much is the new information weighted compared to all previous information.
+-   **alpha**: The learning rate, i.e. how much is the new information
+    weighted compared to all previous information.
 
-- **gamma**: The discount factor for future rewards.
+-   **gamma**: The discount factor for future rewards.
 
-- **epsilon**: The probability to pick a random action, instead of the optimal one.
+-   **epsilon**: The probability to pick a random action, instead of the
+    optimal one.
 
-- **engage_delay**: The time point at which adaptation takes places when using engagement. This can be max = 3.
+-   **engage_delay**: The time point at which adaptation takes places
+    when using engagement. This can be max = 3.
 
-- **engage_adaptation**: The amount by which the emotion is reduced permanently through engagement.
+-   **engage_adaptation**: The amount by which the emotion is reduced
+    permanently through engagement.
 
-- **engage_benefit**: The amount by which the emotion is reduced temporarily through engagement.
+-   **engage_benefit**: The amount by which the emotion is reduced
+    temporarily through engagement.
 
-- **disengage_benefit**: The amount by which the emotion is reduced temporarily through disengagement.
+-   **disengage_benefit**: The amount by which the emotion is reduced
+    temporarily through disengagement.
 
-- **seed**: The random seed to reproduce output.
+-   **seed**: The random seed to reproduce output.
 
+### Other Possible Parameters
 
-### Other Possible Paramters
+These things are currently hard-coded, but we might want to consider
+making them parameters that are easily changed.
 
-These things are currently hard-coded, but we might want to consider making them parameters that are easily changed.
+-   **Stimulus Length**: Currently, a new stimulus is selected after
+    every 3 time points. We could increase this if we want to model the
+    intensity curve in more detail.
 
-- **Stimulus Length**: Currently, a new stimulus is selected after every 3 time points. We could increase this if we want
-to model the intensity curve in more detail.
+-   **Action Selection Frequency**: Currently, the agent selects a new
+    action only when a new stimulus is encountered. It sticks with this
+    action until the stimulus is changed. It would be possible to make
+    the agent chose an action more often e.g., at every time point.
 
-- **Action Selection Frequency**: Currently, the agent selects a new action only when a new stimulus is encountered. It sticks
-with this action until the stimulus is changed. It would be possible to make the agent chose an action more often e.g., at every
-time point.
-
-- **Stimulus Generation**: Currently, a few stimuli are hard-coded and reused with different IDs. We might want to create
-a paramter instead to define allowed ranges of intensity.
+-   **Stimulus Generation**: Currently, a few stimuli are hard-coded and
+    reused with different IDs. We might want to create a parameter
+    instead to define allowed ranges of intensity.
 
 ## How to Run Simulations
 
-1. Open `src/run_training.py`
+1.  Open `src/run_training.py`
 
-2. Change `simulationValues` to the values the parameter should take. For example, if you want `Seed` to take values 1 to 8,
-this would be `simulationValues = [1, 2, 3, 4, 5, 6, 7, 8]` (or any function that creates this vector, such as
-`np.arange, 1, 9, 1)`). The values will be assigned to `Seed` in step 4. The vector can have any length, but even numbers produce nicer matrix plots.
+2.  Change `simulationValues` to the values the parameter should take.
+    For example, if you want `Seed` to take values 1 to 8, this would be
+    `simulationValues = [1, 2, 3, 4, 5, 6, 7, 8]` (or any function that
+    creates this vector, such as `np.arange, 1, 9, 1)`). The values will
+    be assigned to `Seed` in step 4. The vector can have any length, but
+    even numbers produce nicer matrix plots.
 
-If you don't want to run any experiment, but directly look at the output, set `simulationValues = [1]`. Also note that there
-are plots at the bottom of the script, which are commented out `#plt.show()`. You probably want to activate those if not running
-simulation experiments.
+If you don't want to run any experiment, but directly look at the
+output, set `simulationValues = [1]`. Also note that there are plots at
+the bottom of the script, which are commented out `#plt.show()`. You
+probably want to activate those if not running simulation experiments.
 
-3. Set the `file_name` to whatever paramter you are manipulating. For example `file_name = "Seed"`. Note that this creates 
-a folder with the same name in `datasets`, so if the folder `Seed` already exists, name it `Seed_A`. **DONT USE NUMBERS IN
-THE FILE NAMES.**
+3.  Set the `file_name` to whatever parameter you are manipulating. For
+    example `file_name = "Seed"`. Note that this creates a folder with
+    the same name in `datasets`, so if the folder `Seed` already exists,
+    name it `Seed_A`. **DONT USE NUMBERS IN THE FILE NAMES.**
 
-4. Set only the parameter you want to simulate different values for to `sv`. For example:
+4.  Set only the parameter you want to simulate different values for to
+    `sv`. For example:
 
 ```{r, eval=FALSE}
     N_RUNS = 10000
@@ -86,51 +109,53 @@ THE FILE NAMES.**
     seed = sv
 ```
 
-5. Run the program. This will create datasets.
+5.  Run the program. This will create datasets.
 
-6. To get the output plots, open `analysis_scripts/plot_paramter.R`. 
+6.  To get the output plots, open `analysis_scripts/plot_parameter.R`.
 
-7. Scroll down and change `path` to where the datasets were stored that you just created. For example,
-`path <- "../datasets/Seed/"`
+7.  Scroll down and change `path` to where the datasets were stored that
+    you just created. For example, `path <- "../datasets/Seed/"`
 
-8. Change `parameterNames` to something descriptive. This will only affect the titles and file names of the plots,
-so probably the name of the parameter you changed. For example: `parameterName <- "Seed"`
+8.  Change `parameterNames` to something descriptive. This will only
+    affect the titles and file names of the plots, so probably the name
+    of the parameter you changed. For example: `parameterName <- "Seed"`
 
-9. Run the whole script and find the plots in the `plots` folder.
-
-
+9.  Run the whole script and find the plots in the `plots` folder.
 
 ## Plots explanation
 
 ### Actions Plot
 
-![Example Plot 1](../plots/Example_actions.PNG){width=500pt}\
+![Example Plot 1](../plots/Example_actions.PNG){width="500pt"}\
 
-This plot shows the cumulative sum of actions the agent chose on the y-axis, across time points on the x-axis.
+This plot shows the cumulative sum of actions the agent chose on the
+y-axis, across time points on the x-axis.
 
 ### Trajectories Plot
 
-![Example Plot 2](../plots/Example_trajectories.PNG){width=500pt}\
+![Example Plot 2](../plots/Example_trajectories.PNG){width="500pt"}\
 
-This plot shows how the individual actions affect an example emotion with intensity 8, across 3 iterations (3 x 3 time points).
-Emotion intensity is on the y-axis and time points are on the x-axis.
+This plot shows how the individual actions affect an example emotion
+with intensity 8, across 3 iterations (3 x 3 time points). Emotion
+intensity is on the y-axis and time points are on the x-axis.
 
 ### Rewards Plot
 
-![Example Plot 3](../plots/Example_rewards.PNG){width=500pt}\
+![Example Plot 3](../plots/Example_rewards.PNG){width="500pt"}\
 
-This plot shows how the mean reward received for each action develops across time. The cumulative mean is on the y-axis and
-time points are on the x-axis.
+This plot shows how the mean reward received for each action develops
+across time. The cumulative mean is on the y-axis and time points are on
+the x-axis.
 
 ## Parameters in Detail
 
 ### Seed
 
-This is to test the model is stable. The seed should generally not have an influence on the results, assuming there are
-no extremely weird seeds in which e.g., always a random action gets picked due to epsilon.
+This is to test the model is stable. The seed should generally not have
+an influence on the results, assuming there are no extremely weird seeds
+in which e.g., always a random action gets picked due to epsilon.
 
-#### Paramters
-
+#### Parameter
 
 ```{r, eval=FALSE}
 N_RUNS = 10000
@@ -162,16 +187,14 @@ seed = 1:8
 
 ![Seed Actions](../plots/Seed_rewards.png)\
 
-
-
-
 ### N_RUNS
 
-This can be used to show that the actions approach a certain value and do not change anymore at a later point. It could also
-be used to change the ratio of stimuli to runs, but this is probably easier done by manipulating `N_STIMULI`.
+This can be used to show that the actions approach a certain value and
+do not change anymore at a later point. It could also be used to change
+the ratio of stimuli to runs, but this is probably easier done by
+manipulating `N_STIMULI`.
 
-#### Paramters
-
+#### Parameter
 
 ```{r, eval=FALSE}
 N_RUNS = [1000, 3000, 5000, 7000, 10000, 15000, 20000, 30000]
@@ -203,15 +226,15 @@ seed = 123
 
 ![Seed Actions](../plots/N_RUNS_rewards.png)\
 
-
 ### N_STIMULI
 
-This can be used to change how many unique stimuli there are in the environment. As currently all stimuli are equally likely
-to encounter, this also changes the probability to re-encounter a stimulus. Some individuals might have many different stimuli
-in their life, others might always encounter the same stimuli.
+This can be used to change how many unique stimuli there are in the
+environment. As currently all stimuli are equally likely to encounter,
+this also changes the probability to re-encounter a stimulus. Some
+individuals might have many different stimuli in their life, others
+might always encounter the same stimuli.
 
-#### Paramters
-
+#### Parameter
 
 ```{r, eval=FALSE}
 N_RUNS = 10000
@@ -242,6 +265,326 @@ seed = 123
 ##### Rewards
 
 ![Seed Actions](../plots/N_STIMULI_rewards.png)\
+
+### alpha
+
+This can be used to change how much the agent values new information
+compared to old information. This could for example represent people
+that are more likely to jump to conclusions vs people who are very slow
+to adapt their behavior?
+
+#### Parameter
+
+```{r, eval=FALSE}
+N_RUNS = 10000
+N_STIMULI = 2000
+N_ACTIONS = 3
+
+alpha = [0.001, 0.002, 0.004, 0.008, 0.016, 0.04, 0.08, 0.16, 0.33, 0.66, 0.99]
+gamma = .99
+epsilon = .1
+
+engage_delay = 2
+engage_benefit = 4
+disengage_benefit = 5
+engage_adaptation = 2
+seed = 123
+```
+
+#### Plots
+
+##### Actions
+
+![Seed Actions](../plots/alpha_actions.png)\
+
+##### Trajectories
+
+![Seed Actions](../plots/alpha_trajectories.png)\
+
+##### Rewards
+
+![Seed Actions](../plots/alpha_rewards.png)\
+
+### gamma
+
+This can be used to change how much the agent discounts future rewards.
+This can be used to model individual differences in long-term vs
+short-term orientation.
+
+#### Parameter
+
+```{r, eval=FALSE}
+N_RUNS = 10000
+N_STIMULI = 2000
+N_ACTIONS = 3
+
+alpha = .001
+gamma = [0.99, .98, .96, .92, .85, .75, .65, .5, .35, .2, .1, .01]
+epsilon = .1
+
+engage_delay = 2
+engage_benefit = 4
+disengage_benefit = 5
+engage_adaptation = 2
+seed = 123
+```
+
+#### Plots
+
+##### Actions
+
+![Seed Actions](../plots/gamma_actions.png)\
+
+##### Trajectories
+
+![Seed Actions](../plots/gamma_trajectories.png)\
+
+##### Rewards
+
+![Seed Actions](../plots/gamma_rewards.png)\
+
+### epsilon
+
+This can be used to change how much the agent explores alternative
+actions, ignoring what is expected to be the highest reward. This is
+necessary for the RL model to work, but could also be used to model
+individual differences in e.g. openess to experience(?).
+
+#### Parameter
+
+```{r, eval=FALSE}
+N_RUNS = 10000
+N_STIMULI = 2000
+N_ACTIONS = 3
+
+alpha = .001
+gamma = .99
+epsilon = [.1, .2, 3., .4, .5, .6, .7, .8, .9, 1]
+
+engage_delay = 2
+engage_benefit = 4
+disengage_benefit = 5
+engage_adaptation = 2
+seed = 123
+```
+
+#### Plots
+
+##### Actions
+
+![Seed Actions](../plots/epsilon_actions.png)\
+
+##### Trajectories
+
+![Seed Actions](../plots/epsilon_trajectories.png)\
+
+##### Rewards
+
+![Seed Actions](../plots/epsilon_rewards.png)\
+
+
+
+
+### engage_delay
+
+This determines how long the agent takes to adapt to a stimulus using engagement. Technically, it determines at which
+time point the `engage_adaptation` gets substracted from the emotional intensity of the stimulus. This could possibly be 
+used to model people that are faster or slower at reppraisal.
+
+#### Parameter
+
+```{r, eval=FALSE}
+N_RUNS = 10000
+N_STIMULI = 2000
+N_ACTIONS = 3
+
+alpha = .001
+gamma = .99
+epsilon = .1
+
+engage_delay = [0, 1, 2]
+engage_benefit = 4
+disengage_benefit = 5
+engage_adaptation = 2
+seed = 123
+```
+
+#### Plots
+
+##### Actions
+
+![Seed Actions](../plots/engage_delay_actions.png)\
+
+##### Trajectories
+
+![Seed Actions](../plots/engage_delay_trajectories.png)\
+
+##### Rewards
+
+![Seed Actions](../plots/engage_delay_rewards.png)\
+
+
+
+
+### engage_delay
+
+This determines how long the agent takes to adapt to a stimulus using engagement. Technically, it determines at which
+time point the `engage_adaptation` gets substracted from the emotional intensity of the stimulus. This could possibly be 
+used to model people that are faster or slower at reppraisal.
+
+#### Parameter
+
+```{r, eval=FALSE}
+N_RUNS = 10000
+N_STIMULI = 2000
+N_ACTIONS = 3
+
+alpha = .001
+gamma = .99
+epsilon = .1
+
+engage_delay = [0, 1, 2]
+engage_benefit = 4
+disengage_benefit = 5
+engage_adaptation = 2
+seed = 123
+```
+
+#### Plots
+
+##### Actions
+
+![Seed Actions](../plots/engage_delay_actions.png)\
+
+##### Trajectories
+
+![Seed Actions](../plots/engage_delay_trajectories.png)\
+
+##### Rewards
+
+![Seed Actions](../plots/engage_delay_rewards.png)\
+
+
+
+
+
+### engage_benefit
+
+This determines how much engagement reduces the emotional intensity immediately. This is different from `engage_adapt`, which determines how much the emotional intensity is reducedd in the long-term. We expect this to be lower than the reduction
+when using disengagement.
+
+#### Parameter
+
+```{r, eval=FALSE}
+N_RUNS = 10000
+N_STIMULI = 2000
+N_ACTIONS = 3
+
+alpha = .001
+gamma = .99
+epsilon = .1
+
+engage_delay = 2
+engage_benefit = 1:10
+disengage_benefit = 5
+engage_adaptation = 2
+seed = 123
+```
+
+#### Plots
+
+##### Actions
+
+![Seed Actions](../plots/engage_benefit_actions.png)\
+
+##### Trajectories
+
+![Seed Actions](../plots/engage_benefit_trajectories.png)\
+
+##### Rewards
+
+![Seed Actions](../plots/engage_benefit_rewards.png)\
+
+
+
+
+
+### disengage_benefit
+
+This determines how much disengagement reduces the emotional intensity at every time point it is used.
+
+#### Parameter
+
+```{r, eval=FALSE}
+N_RUNS = 10000
+N_STIMULI = 2000
+N_ACTIONS = 3
+
+alpha = .001
+gamma = .99
+epsilon = .1
+
+engage_delay = 2
+engage_benefit = 4
+disengage_benefit = 1:10
+engage_adaptation = 2
+seed = 123
+```
+
+#### Plots
+
+##### Actions
+
+![Seed Actions](../plots/disengage_benefit_actions.png)\
+
+##### Trajectories
+
+![Seed Actions](../plots/disengage_benefit_trajectories.png)\
+
+##### Rewards
+
+![Seed Actions](../plots/disengage_benefit_rewards.png)\
+
+
+
+
+
+### engage_adaptation
+
+This determines how much engagement changes the emotional intensity in the long-term, at time point `engage_delay` of the
+first encounter.
+
+#### Parameter
+
+```{r, eval=FALSE}
+N_RUNS = 10000
+N_STIMULI = 2000
+N_ACTIONS = 3
+
+alpha = .001
+gamma = .99
+epsilon = .1
+
+engage_delay = 2
+engage_benefit = 4
+disengage_benefit = 5
+engage_adaptation = 1:10
+seed = 123
+```
+
+#### Plots
+
+##### Actions
+
+![Seed Actions](../plots/engage_adaptation_actions.png)\
+
+##### Trajectories
+
+![Seed Actions](../plots/engage_adaptation_trajectories.png)\
+
+##### Rewards
+
+![Seed Actions](../plots/engage_adaptation_rewards.png)\
 
 
 
