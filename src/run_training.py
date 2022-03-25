@@ -10,10 +10,10 @@ import os
 from environment import Stimulus, AgentStatus, EmotionEnv
 from agent import QTableAgent
 
-simulationValues = [50, 100, 250, 500, 1000, 2000, 4000, 8000, 15000]  # a vector of values that the parameter you want to change should take.
+simulationValues = np.arange(0, 11, 1)  # a vector of values that the parameter you want to change should take.
                             # For no simulations, set to [1] and set all paramter values yourself
 
-file_name = "N_STIMULI"      # the first part of the file name, automatically appended with the respective simulation value and data description
+file_name = "engage_adaptation"      # the first part of the file name, automatically appended with the respective simulation value and data description
 # DONT USE NUMBERS IN FILE NAME
 
 folder_path = "../datasets/" + file_name   # where to save the data
@@ -23,8 +23,9 @@ for sv in simulationValues:
 
 
     # parameter list; to run simulations, change the desired parameter to "sv"
+    SEED = 123
     N_RUNS = 10000
-    N_STIMULI = sv
+    N_STIMULI = 2000
     N_ACTIONS = 3
 
     alpha = .001
@@ -34,11 +35,10 @@ for sv in simulationValues:
     engage_delay = 2
     engage_benefit = 4
     disengage_benefit = 5
-    engage_adaptation = 2
-    seed = 123
+    engage_adaptation = sv
 
-    random.seed(seed)
-    np.random.seed(seed)
+    random.seed(SEED)
+    np.random.seed(SEED)
 
     # p_recurrence does not do anything at the moment
     stimuli_list = [random.choice(
