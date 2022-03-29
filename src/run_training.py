@@ -6,9 +6,21 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import path
 import os
+import logging
+import sys
 
 from environment import Stimulus, AgentStatus, EmotionEnv
 from agent import QTableAgent
+
+
+# Set up logging
+logger = logging.getLogger(__name__)
+stream_handler = logging.StreamHandler(sys.stdout)
+formatter = logging.Formatter('%(message)s')
+stream_handler.setFormatter(formatter)
+logger.addHandler(stream_handler)
+logger.setLevel(logging.DEBUG)
+
 
 simulationValues = np.arange(0, 11, 1)  # a vector of values that the parameter you want to change should take.
                             # For no simulations, set to [1] and set all paramter values yourself
@@ -17,7 +29,7 @@ file_name = "engage_adaptation"      # the first part of the file name, automati
 # DONT USE NUMBERS IN FILE NAME
 
 folder_path = "../datasets/" + file_name   # where to save the data
-os.makedirs(folder_path)     # create a folder
+# os.makedirs(folder_path)     # create a folder
 
 for sv in simulationValues:
 
@@ -72,10 +84,9 @@ for sv in simulationValues:
 
     # Run simulation
     for i in range(N_RUNS):
-        #env.render()
         next_state, reward, done, info = env.step(action)
         agent.update(state, next_state, action, reward)
-        print(f'action: {action}, reward: {reward}, step: {i}')
+        logger.debug(f'action: {action}, reward: {reward}, step: {i}')
         env.render()
         action_counts[i, action] += 1
         reward_counts[i, action] += reward
@@ -102,7 +113,7 @@ for sv in simulationValues:
         action = ac
         for i in np.arange(0, 9, 1):
             next_state, reward, done, info = env2.step(action)
-            print(f'action: {action}, reward: {reward}, step: {i}')
+            logger.debug(f'action: {action}, reward: {reward}, step: {i}')
             intensity_values[i, ac] = agent_status2.current_emo_intensity
             env2.render()
             if done:
