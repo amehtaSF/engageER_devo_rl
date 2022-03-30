@@ -19,7 +19,6 @@ stream_handler.setFormatter(formatter)
 logger.addHandler(stream_handler)
 logger.setLevel(logging.DEBUG)
 
-
 simulationValues = [1] # a vector of values that the parameter you want to change should take.
                             # For no simulations, set to [1] and set all paramter values yourself
 
