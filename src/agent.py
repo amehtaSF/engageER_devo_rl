@@ -66,7 +66,6 @@ class QTableAgent:
         return action
 
     def update(self, state_id, next_state_id, action_id, reward):
-        q = self.qtable[state_id, action_id] + self.alpha * \
-            (reward + self.gamma * np.max(self.qtable[next_state_id, :]) - self.qtable[state_id, action_id])
+        q = self.qtable[state_id, action_id] + self.alpha * (reward + self.gamma * np.max(self.qtable[next_state_id, :]) - self.qtable[state_id, action_id])
         self.qtable[state_id, action_id] = q
 

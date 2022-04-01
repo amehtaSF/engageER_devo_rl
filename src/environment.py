@@ -67,7 +67,6 @@ class EmotionEnv(gym.Env):
     # ENGAGE = 2
 
     def __init__(self,
-                 engage_delay: float,
                  engage_benefit: float,
                  disengage_benefit: float,
                  engage_adaptation: float,
@@ -84,11 +83,9 @@ class EmotionEnv(gym.Env):
 
         self.stimuli = stimuli
         self.n_stimuli = len(stimuli)
-        self.engage_delay = engage_delay
         self.engage_benefit = engage_benefit
         self.engage_adaptation = engage_adaptation
         self.disengage_benefit = disengage_benefit
-        self.current_timepoint = 0
         self.agent_status = agent_status
         self.current_appraisal = None
 
@@ -110,45 +107,35 @@ class EmotionEnv(gym.Env):
             raise ValueError(f'Received invalid action {action} which is not part of the action space')
 
         info = None
+        reward = self._get_reward()
+        done = True
+        self.reset()
 
-        self.current_timepoint += 1
-
-        if self._get_doneness():
-            done = True
-        else:
-            done = False
-
-        return self.agent_status.current_id, self._get_reward(), done, info
+        return self.agent_status.current_id, reward, done, info
 
     def _inaction(self):
         return self.agent_status
 
     def _disengage(self):
-        if self.current_timepoint != 0:
-            self.agent_status.current_emo_intensity -= self.disengage_benefit
-            self.agent_status.current_emo_intensity = np.clip(self.agent_status.current_emo_intensity, 0, 10)
+        #if self.current_timepoint != 0:
+        self.agent_status.current_emo_intensity -= self.disengage_benefit
+        self.agent_status.current_emo_intensity = np.clip(self.agent_status.current_emo_intensity, 0, 10)
         return self.agent_status
 
     def _engage(self):
-        if self.current_timepoint == self.engage_delay:
-            for i in range(0, len(self.agent_status.stimuliAppraisals)):
-                if self.agent_status.stimuliAppraisals[i].id == self.agent_status.current_id:
-                    self.current_appraisal = self.agent_status.stimuliAppraisals[i]
-            if not self.current_appraisal.reappraised:
-                self.current_appraisal.emo_intensity -= self.engage_adaptation
-                self.agent_status.current_emo_intensity -= self.engage_adaptation
-                self.current_appraisal.reappraised = True
-        elif self.current_timepoint != self.engage_delay and self.current_timepoint != 0:
-            self.agent_status.current_emo_intensity -= self.engage_benefit
+        for i in range(0, len(self.agent_status.stimuliAppraisals)):
+            if self.agent_status.stimuliAppraisals[i].id == self.agent_status.current_id:
+                self.current_appraisal = self.agent_status.stimuliAppraisals[i]
+        if not self.current_appraisal.reappraised:
+            self.current_appraisal.emo_intensity -= self.engage_adaptation
+            self.current_appraisal.reappraised = True
+        self.agent_status.current_emo_intensity -= self.engage_benefit
         self.agent_status.current_emo_intensity = np.clip(self.agent_status.current_emo_intensity, 0, 10)
         return self.agent_status
 
     def _get_reward(self):
-        reward = -1 * self.agent_status.current_emo_intensity
+        reward = 10 - self.agent_status.current_emo_intensity
         return reward
-
-    def _get_doneness(self):
-        return True if self.current_timepoint == 3 else False
 
     def reset(self):
         self.current_timepoint = 0
