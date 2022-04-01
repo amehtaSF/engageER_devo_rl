@@ -32,17 +32,19 @@ for sv in simulationValues:
 
 
     # parameter list; to run simulations, change the desired parameter to "sv"
-    SEED = 123
-    N_RUNS = 1000
-    N_STIMULI = 200
+    SEED = 12
+    N_RUNS = 10000
+    N_STIMULI = 2000
     N_ACTIONS = 3
+    STIMULUS_INT_MIN = 1
+    STIMULUS_INT_MAX = 5
 
-    alpha = .001
+    alpha = .01
     gamma = .99
     epsilon = .1
 
-    engage_benefit = 3
-    disengage_benefit = 5
+    engage_benefit = 0
+    disengage_benefit = .75
     engage_adaptation = 2
 
     random.seed(SEED)
@@ -52,7 +54,7 @@ for sv in simulationValues:
     stimuli_list = []
     for i in range(N_STIMULI):
         id = i
-        emo_intensity = np.random.randint(1, 11)
+        emo_intensity = np.random.randint(STIMULUS_INT_MIN, STIMULUS_INT_MAX + 1)
         p_recurrence = np.random.randint(0, 11)
         stimuli_list.append(Stimulus(id=id, emo_intensity=emo_intensity, p_recurrence=p_recurrence))
 
@@ -79,7 +81,7 @@ for sv in simulationValues:
 
     # Run simulation
     for i in range(N_RUNS):
-        state = agent_status.current_id
+        state = env.get_original_intensity(agent_status.current_id)
         next_state, reward, done, info = env.step(action)
         agent.update(state, next_state, action, reward)
         logger.debug(f'action: {action}, reward: {reward}, step: {i}')
@@ -92,8 +94,8 @@ for sv in simulationValues:
 
 
     #create data for running the same stimulus 3 times with every action
-    intensity_values = np.zeros((4, N_ACTIONS))
-    stimuli_list2 = [Stimulus(id=N_STIMULI + 1, emo_intensity=8, p_recurrence=5)]
+    intensity_values = np.zeros((30, N_ACTIONS))
+    stimuli_list2 = [Stimulus(id=N_STIMULI + 1, emo_intensity=3, p_recurrence=5)]
     agent_status2 = AgentStatus()
     env2 = EmotionEnv(engage_benefit=engage_benefit,
                       disengage_benefit=disengage_benefit,
@@ -105,19 +107,21 @@ for sv in simulationValues:
     state = agent_status2.current_id
     for ac in [0, 1, 2]:
         action = ac
-        for i in np.arange(0, 4, 1):
+        for i in np.arange(1, 31, 1):
             next_state, reward, done, info = env2.step(action)
             logger.debug(f'action: {action}, reward: {reward}, step: {i}')
-            intensity_values[i, ac] = agent_status2.current_emo_intensity
+            intensity_values[i-1, ac] = agent_status2.current_emo_intensity
             env2.render()
 
 
     #plot the emotional intensity curve per action
-    time = np.arange(0, 4)
+    time = np.arange(1, 31)
     plt.plot(time, intensity_values[:, 0], marker='', color='olive', linewidth=2, label='inaction')
     plt.plot(time, intensity_values[:, 1], marker='', color='blue', linewidth=2, label='disengage')
     plt.plot(time, intensity_values[:, 2], marker='', color='red', linewidth=2, label='engage')
     plt.legend()
+    ax = plt.gca()
+    ax.set_ylim([0, 10])
     plt.show()
 
     # Plot choices

@@ -20,6 +20,7 @@ class Stimulus:
         return {'id': self.id, 'emo_intensity': self.emo_intensity, "p_recurrence": self.p_recurrence, 'reappraised': self.reappraised}
 
 
+
 class AgentStatus:
 
     def __init__(self):
@@ -88,6 +89,7 @@ class EmotionEnv(gym.Env):
         self.disengage_benefit = disengage_benefit
         self.agent_status = agent_status
         self.current_appraisal = None
+        self.current_timepoint = 1
 
     def step(self, action: int) -> tuple:
         '''
@@ -96,20 +98,25 @@ class EmotionEnv(gym.Env):
         :return: state, reward, done, info
         '''
 
-        # Take action
-        if action == 1:
-            self._disengage()
-        elif action == 2:
-            self._engage()
-        elif action == 0:
-            self._inaction()
+
+        if self.current_timepoint == 10:
+            done = True
+            self.reset()
         else:
-            raise ValueError(f'Received invalid action {action} which is not part of the action space')
+            done = False
+            # Take action
+            if action == 1:
+                self._disengage()
+            elif action == 2:
+                self._engage()
+            elif action == 0:
+                self._inaction()
+            else:
+                raise ValueError(f'Received invalid action {action} which is not part of the action space')
+            self.current_timepoint += 1
 
         info = None
         reward = self._get_reward()
-        done = True
-        self.reset()
 
         return self.agent_status.current_id, reward, done, info
 
@@ -117,8 +124,8 @@ class EmotionEnv(gym.Env):
         return self.agent_status
 
     def _disengage(self):
-        #if self.current_timepoint != 0:
-        self.agent_status.current_emo_intensity -= self.disengage_benefit
+        if self.current_timepoint != 0:
+            self.agent_status.current_emo_intensity -= self.disengage_benefit
         self.agent_status.current_emo_intensity = np.clip(self.agent_status.current_emo_intensity, 0, 10)
         return self.agent_status
 
@@ -126,10 +133,10 @@ class EmotionEnv(gym.Env):
         for i in range(0, len(self.agent_status.stimuliAppraisals)):
             if self.agent_status.stimuliAppraisals[i].id == self.agent_status.current_id:
                 self.current_appraisal = self.agent_status.stimuliAppraisals[i]
-        if not self.current_appraisal.reappraised:
+        if self.current_appraisal.emo_intensity == self.current_timepoint:
             self.current_appraisal.emo_intensity -= self.engage_adaptation
-            self.current_appraisal.reappraised = True
-        self.agent_status.current_emo_intensity -= self.engage_benefit
+            self.agent_status.current_emo_intensity -= self.engage_adaptation
+            #self.current_appraisal.reappraised = True
         self.agent_status.current_emo_intensity = np.clip(self.agent_status.current_emo_intensity, 0, 10)
         return self.agent_status
 
@@ -138,9 +145,15 @@ class EmotionEnv(gym.Env):
         return reward
 
     def reset(self):
-        self.current_timepoint = 0
+        self.current_timepoint = 1
         new_stimulus = random.choice(self.stimuli)
         self.agent_status.appraise_stimuli(new_stimulus)
+
+
+    def get_original_intensity(self, stimulus_id):
+        for i in range(0, len(self.stimuli)):
+            if self.stimuli[i].id == stimulus_id:
+                return self.stimuli[i].emo_intensity
 
     def render(self, mode='human'):
         '''
