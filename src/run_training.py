@@ -17,31 +17,31 @@ stream_handler = logging.StreamHandler(sys.stdout)
 formatter = logging.Formatter('%(message)s')
 stream_handler.setFormatter(formatter)
 logger.addHandler(stream_handler)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
-simulationValues = [1] # a vector of values that the parameter you want to change should take.
+simulationValues = [1000, 5000, 10000]# a vector of values that the parameter you want to change should take.
                             # For no simulations, set to [1] and set all paramter values yourself
 
-#file_name = "engage_adaptation"      # the first part of the file name, automatically appended with the respective simulation value and data description
-# DONT USE NUMBERS IN FILE NAME
+file_name = "N_RUNS_b"      # the first part of the file name, automatically appended with the respective simulation value and data description
+#DONT USE NUMBERS IN FILE NAME
 
-#folder_path = "../datasets/" + file_name   # where to save the data
-#os.makedirs(folder_path)     # create a folder
+folder_path = "../datasets/" + file_name   # where to save the data
+os.makedirs(folder_path)     # create a folder
 
 for sv in simulationValues:
 
 
     # parameter list; to run simulations, change the desired parameter to "sv"
     SEED = 12
-    N_RUNS = 100000
-    N_STIMULI = 20000
+    N_RUNS = sv
+    N_STIMULI = 2000
     N_ACTIONS = 3
     STIMULUS_INT_MIN = 1
     STIMULUS_INT_MAX = 10
 
     alpha = .001
     gamma = .9
-    epsilon = 1
+    epsilon = .1
 
     engage_benefit = 0
     disengage_benefit = 1
@@ -84,9 +84,9 @@ for sv in simulationValues:
         state = env.get_original_intensity(agent_status.current_id)
         next_state, reward, done, info = env.step(action)
         agent.update(state, next_state, action, reward)
-        print(state, next_state)
         logger.debug(f'action: {action}, reward: {reward}, step: {i}')
-        env.render()
+        print(np.round((i/N_RUNS) * 100, 2), '%')
+        #env.render()
         action_counts[i, action] += 1
         reward_counts[i, action] += reward
         if done:
@@ -114,6 +114,29 @@ for sv in simulationValues:
             intensity_values[i-1, ac] = agent_status2.current_emo_intensity
             env2.render()
 
+    #Create balanced qTable with current settings
+    agent_status3 = AgentStatus()
+
+    env3 = EmotionEnv(engage_benefit=engage_benefit,
+                             disengage_benefit=disengage_benefit,
+                             engage_adaptation=engage_adaptation,
+                             stimuli=stimuli_list,
+                             agent_status=agent_status3
+                             )
+    env3.reset()
+
+    agent2 = QTableAgent(11, n_actions=N_ACTIONS, alpha=alpha, gamma=gamma, epsilon=1)  # for balanced qTable
+
+    action = 0  # the first action
+
+    # Run simulation
+    for i in range(N_RUNS):
+        state = env.get_original_intensity(agent_status3.current_id)
+        next_state, reward, done, info = env3.step(action)
+        agent2.update(state, next_state, action, reward)
+        print(np.round((i/N_RUNS) * 100, 2), '%')
+        if done:
+            action = agent2.choose_action(state, policy="epsilon_greedy")
 
     #plot the emotional intensity curve per action
     time = np.arange(1, 31)
@@ -158,23 +181,24 @@ for sv in simulationValues:
 
 
     #expected value of action per intensity
-    df_expected_values = pd.DataFrame({'inaction': agent.qtable[:,0], 'disengage': agent.qtable[:,1], 'engage': agent.qtable[:,2]})
-    df_expected_values.round(decimals=2).to_csv('ExpectedValuesOfActions.csv')
+    df_expected_values = pd.DataFrame({'inaction': agent2.qtable[:,0], 'disengage': agent2.qtable[:,1], 'engage': agent2.qtable[:,2]})
+    file_name0 = folder_path + '/' + file_name + '_' + str(sv) + '_expectedValue' '.csv'
+    df_expected_values.round(decimals=2).to_csv(file_name0)
 
-    # #to write the actions to csv
-    # df1 = pd.DataFrame({'inaction': action_cumsum[:, 0], 'disengage': action_cumsum[:, 1], 'engage': action_cumsum[:, 2]})
-    # file_name1 = folder_path + '/' + file_name + '_' + str(sv) + '_actionCumSum' '.csv'
-    # df1.to_csv(file_name1)
-    #
-    #
-    # #To write the rewards to csv
-    # df2 = pd.DataFrame({'inaction': reward_cumsum[:, 0]/inaction_timeline, 'disengage': reward_cumsum[:, 1]/disengage_timeline,
-    #                     'engage': reward_cumsum[:, 2]/engage_timeline})
-    # file_name2 = folder_path + '/' + file_name + '_' + str(sv) + '_RewardsCumMean' '.csv'
-    # df2.to_csv(file_name2)
-    #
-    #
-    # #To write action trajectory to csv
-    # df3 = pd.DataFrame({'inaction': intensity_values[:, 0], 'disengage': intensity_values[:, 1], 'engage': intensity_values[:, 2]})
-    # file_name3 = folder_path + '/' + file_name + '_' + str(sv) + '_actionTrajectory' '.csv'
-    # df3.to_csv(file_name3)
+    #to write the actions to csv
+    df1 = pd.DataFrame({'inaction': action_cumsum[:, 0], 'disengage': action_cumsum[:, 1], 'engage': action_cumsum[:, 2]})
+    file_name1 = folder_path + '/' + file_name + '_' + str(sv) + '_actionCumSum' '.csv'
+    df1.to_csv(file_name1)
+
+
+    #To write the rewards to csv
+    df2 = pd.DataFrame({'inaction': reward_cumsum[:, 0]/inaction_timeline, 'disengage': reward_cumsum[:, 1]/disengage_timeline,
+                        'engage': reward_cumsum[:, 2]/engage_timeline})
+    file_name2 = folder_path + '/' + file_name + '_' + str(sv) + '_RewardsCumMean' '.csv'
+    df2.to_csv(file_name2)
+
+
+    #To write action trajectory to csv
+    df3 = pd.DataFrame({'inaction': intensity_values[:, 0], 'disengage': intensity_values[:, 1], 'engage': intensity_values[:, 2]})
+    file_name3 = folder_path + '/' + file_name + '_' + str(sv) + '_actionTrajectory' '.csv'
+    df3.to_csv(file_name3)
