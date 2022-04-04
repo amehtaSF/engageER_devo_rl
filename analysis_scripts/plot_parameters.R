@@ -80,9 +80,24 @@ library("readr")
 
 
 #### GET PLOTS ######
-path <- "../datasets/engage_adaptation/"
-parameterName <- "engage_adaptation"
+path <- "../datasets/expected_value/"
+parameterName <- "expected_value"
 .getAllPlots(path, parameterName)
 
 
+
+
+
+###Expected value plot
+expected_values <- read.csv("../datasets/expected_value/expected_value_actions.csv")
+expected_values <- tidyr::gather(expected_values, action, exp_value, inaction:engage, factor_key = TRUE)
+png("expected_value_plot.png", height = 500, width = 500)
+exp_value_plot <- ggplot2::ggplot() +
+  ggplot2::geom_point(data = expected_values, mapping = ggplot2::aes(x = X, y = exp_value, color = action), size = 4) +
+  ggplot2::geom_line(data = expected_values, mapping = ggplot2::aes(x = X, y = exp_value, color = action), size = 1) +
+  ggplot2::scale_x_continuous(breaks = 0:10, name = "Stimulus Intensity") +
+  ggplot2::scale_y_continuous(breaks = pretty(expected_values$exp_value), name = "Expected Value") +
+  ggplot2::theme_light()
+print(exp_value_plot)
+dev.off()
 

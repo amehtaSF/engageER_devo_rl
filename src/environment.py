@@ -118,7 +118,7 @@ class EmotionEnv(gym.Env):
         info = None
         reward = self._get_reward()
 
-        return self.agent_status.current_id, reward, done, info
+        return self.agent_status.current_emo_intensity, reward, done, info
 
     def _inaction(self):
         return self.agent_status
@@ -141,7 +141,7 @@ class EmotionEnv(gym.Env):
         return self.agent_status
 
     def _get_reward(self):
-        reward = 10 - self.agent_status.current_emo_intensity
+        reward = -self.agent_status.current_emo_intensity
         return reward
 
     def reset(self):

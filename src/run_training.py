@@ -33,18 +33,18 @@ for sv in simulationValues:
 
     # parameter list; to run simulations, change the desired parameter to "sv"
     SEED = 12
-    N_RUNS = 10000
-    N_STIMULI = 2000
+    N_RUNS = 100000
+    N_STIMULI = 20000
     N_ACTIONS = 3
     STIMULUS_INT_MIN = 1
-    STIMULUS_INT_MAX = 5
+    STIMULUS_INT_MAX = 10
 
-    alpha = .01
-    gamma = .99
-    epsilon = .1
+    alpha = .001
+    gamma = .9
+    epsilon = 1
 
     engage_benefit = 0
-    disengage_benefit = .75
+    disengage_benefit = 1
     engage_adaptation = 2
 
     random.seed(SEED)
@@ -70,7 +70,7 @@ for sv in simulationValues:
 
 
 
-    agent = QTableAgent(env.n_stimuli, n_actions=N_ACTIONS, alpha=alpha, gamma=gamma, epsilon=epsilon)
+    agent = QTableAgent(11, n_actions=N_ACTIONS, alpha=alpha, gamma=gamma, epsilon=epsilon)
 
 
     action = 0 # the first action
@@ -84,6 +84,7 @@ for sv in simulationValues:
         state = env.get_original_intensity(agent_status.current_id)
         next_state, reward, done, info = env.step(action)
         agent.update(state, next_state, action, reward)
+        print(state, next_state)
         logger.debug(f'action: {action}, reward: {reward}, step: {i}')
         env.render()
         action_counts[i, action] += 1
@@ -95,7 +96,7 @@ for sv in simulationValues:
 
     #create data for running the same stimulus 3 times with every action
     intensity_values = np.zeros((30, N_ACTIONS))
-    stimuli_list2 = [Stimulus(id=N_STIMULI + 1, emo_intensity=3, p_recurrence=5)]
+    stimuli_list2 = [Stimulus(id=N_STIMULI + 1, emo_intensity=9, p_recurrence=5)]
     agent_status2 = AgentStatus()
     env2 = EmotionEnv(engage_benefit=engage_benefit,
                       disengage_benefit=disengage_benefit,
@@ -146,11 +147,20 @@ for sv in simulationValues:
     plt.legend()
     plt.show()
 
-    # #set options for pandas
-    # pd.set_option('display.max_columns', None)
-    # pd.set_option('display.width', None)
-    # pd.set_option('display.max_colwidth', None)
-    #
+
+
+
+
+    #set options for pandas
+    pd.set_option('display.max_columns', None)
+    pd.set_option('display.width', None)
+    pd.set_option('display.max_colwidth', None)
+
+
+    #expected value of action per intensity
+    df_expected_values = pd.DataFrame({'inaction': agent.qtable[:,0], 'disengage': agent.qtable[:,1], 'engage': agent.qtable[:,2]})
+    df_expected_values.round(decimals=2).to_csv('ExpectedValuesOfActions.csv')
+
     # #to write the actions to csv
     # df1 = pd.DataFrame({'inaction': action_cumsum[:, 0], 'disengage': action_cumsum[:, 1], 'engage': action_cumsum[:, 2]})
     # file_name1 = folder_path + '/' + file_name + '_' + str(sv) + '_actionCumSum' '.csv'
