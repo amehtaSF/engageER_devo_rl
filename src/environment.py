@@ -12,6 +12,7 @@ class Stimulus:
         self.emo_intensity = emo_intensity
         self.p_occurrence = p_occurrence
         self.reappraised = False
+        self.encounter_counter = 0
 
     def get_intensity(self):
         return self.emo_intensity
@@ -20,7 +21,8 @@ class Stimulus:
         return self.p_occurrence
 
     def get_dict(self):
-        return {'id': self.id, 'emo_intensity': self.emo_intensity, "p_occurrence": self.p_occurrence, 'reappraised': self.reappraised}
+        return {'id': self.id, 'emo_intensity': self.emo_intensity, "p_occurrence": self.p_occurrence, 'reappraised': self.reappraised,
+                'encounters': self.encounter_counter}
 
 
 
@@ -54,6 +56,7 @@ class AgentStatus:
                 self.current_emo_intensity = self.stimuliAppraisals[i].emo_intensity
                 self.expected_occurrence = self.stimuliAppraisals[i].p_occurrence
                 self.current_id = self.stimuliAppraisals[i].id
+                self.stimuliAppraisals[i].encounter_counter += 1
 
 
 
@@ -93,6 +96,7 @@ class EmotionEnv(gym.Env):
         self.agent_status = agent_status
         self.current_appraisal = None
         self.current_timepoint = 1
+        self.replacement_stimulus_counter = 0
 
     def step(self, action: int) -> tuple:
         '''
@@ -102,21 +106,21 @@ class EmotionEnv(gym.Env):
         '''
 
 
-        if self.current_timepoint == 10:
+        if self.current_timepoint == 9:
             done = True
-            self.reset()
         else:
             done = False
-            # Take action
-            if action == 1:
-                self._disengage()
-            elif action == 2:
-                self._engage()
-            elif action == 0:
-                self._inaction()
-            else:
-                raise ValueError(f'Received invalid action {action} which is not part of the action space')
-            self.current_timepoint += 1
+
+        # Take action
+        if action == 1:
+            self._disengage()
+        elif action == 2:
+            self._engage()
+        elif action == 0:
+            self._inaction()
+        else:
+            raise ValueError(f'Received invalid action {action} which is not part of the action space')
+        self.current_timepoint += 1
 
         info = None
         reward = self._get_reward()
@@ -152,6 +156,19 @@ class EmotionEnv(gym.Env):
         probs = np.array([stimulus.get_p_occurrence() for stimulus in self.stimuli]).flatten()
         new_stimulus = np.random.choice(self.stimuli, p=probs)
         self.agent_status.appraise_stimuli(new_stimulus)
+
+# stimulus gets replaced with a new stimulus with the same probability of occurrence and intensity, but new id
+    def refresh_stimuli_list(self):
+        for i in range(0, len(self.agent_status.stimuliAppraisals)):
+            if self.agent_status.stimuliAppraisals[i].encounter_counter == 5:
+                id_to_remove = self.agent_status.stimuliAppraisals[i].id
+                for j in range(0, len(self.stimuli)):
+                    if self.stimuli[j].id == id_to_remove:
+                        new_id = len(self.stimuli) + self.replacement_stimulus_counter
+                        self.replacement_stimulus_counter += 1
+                        self.stimuli[j] = Stimulus(id=new_id, emo_intensity=self.stimuli[j].emo_intensity, p_occurrence=self.stimuli[j].p_occurrence)
+
+
 
 
     def get_original_intensity(self, stimulus_id):

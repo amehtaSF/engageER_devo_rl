@@ -30,7 +30,6 @@ simulationValues = [1]# a vector of values that the parameter you want to change
 
 for sv in simulationValues:
 
-
     # parameter list; to run simulations, change the desired parameter to "sv"
     SEED = 12
     N_RUNS = 10000
@@ -45,7 +44,7 @@ for sv in simulationValues:
 
     engage_benefit = 0
     disengage_benefit = .5
-    engage_adaptation = 3
+    engage_adaptation = 2
 
     random.seed(SEED)
     np.random.seed(SEED)
@@ -71,12 +70,11 @@ for sv in simulationValues:
                      )
     env.reset()
 
-
-
     agent = QTableAgent(11, n_actions=N_ACTIONS, alpha=alpha, gamma=gamma, epsilon=epsilon)
 
 
-    action = 0 # the first action
+
+    action = 1 # the first action
 
     # Record actions and rewards
     action_counts = np.zeros((N_RUNS, agent.n_actions))
@@ -86,21 +84,25 @@ for sv in simulationValues:
     for i in range(N_RUNS):
         state = env.get_original_intensity(agent_status.current_id)
         next_state, reward, done, info = env.step(action)
-        print(state, next_state)
+        #print(state, next_state)
         agent.update(state, next_state, action, reward)
         logger.debug(f'action: {action}, reward: {reward}, step: {i}')
         #print(np.round((i/N_RUNS) * 100, 2), '%')
         env.render()
         action_counts[i, action] += 1
         reward_counts[i, action] += reward
+        print(agent.qtable)
         if done:
+            env.refresh_stimuli_list()
+            env.reset()
+            state = env.get_original_intensity(agent_status.current_id)
             action = agent.choose_action(state, policy="epsilon_greedy")
 
 
 
     #create data for running the same stimulus 3 times with every action
-    intensity_values = np.zeros((30, N_ACTIONS))
-    stimuli_list2 = [Stimulus(id=N_STIMULI + 1, emo_intensity=9, p_occurrence=1)]
+    intensity_values = np.zeros((27, N_ACTIONS))
+    stimuli_list2 = [Stimulus(id=21894721947, emo_intensity=9, p_occurrence=1)]
     agent_status2 = AgentStatus()
     env2 = EmotionEnv(engage_benefit=engage_benefit,
                       disengage_benefit=disengage_benefit,
@@ -109,15 +111,20 @@ for sv in simulationValues:
                       agent_status=agent_status2
                       )
     env2.reset()
-    state = agent_status2.current_id
+
+
     for ac in [0, 1, 2]:
         action = ac
-        for i in np.arange(1, 31, 1):
+        for i in np.arange(1, 28, 1):
             next_state, reward, done, info = env2.step(action)
             logger.debug(f'action: {action}, reward: {reward}, step: {i}')
             intensity_values[i-1, ac] = agent_status2.current_emo_intensity
+            print(agent_status2.current_emo_intensity)
             env2.render()
+            if done:
+                env2.reset()
 
+    print(intensity_values)
     #Create balanced qTable with current settings
     agent_status3 = AgentStatus()
 
@@ -135,15 +142,18 @@ for sv in simulationValues:
 
     # Run simulation
     for i in range(N_RUNS):
-        state = env.get_original_intensity(agent_status3.current_id)
+        state = env3.get_original_intensity(agent_status3.current_id)
         next_state, reward, done, info = env3.step(action)
         agent2.update(state, next_state, action, reward)
         print(np.round((i/N_RUNS) * 100, 2), '%')
         if done:
+            env3.refresh_stimuli_list()
+            env3.reset()
+            state = env3.get_original_intensity(agent_status.current_id)
             action = agent2.choose_action(state, policy="epsilon_greedy")
 
     #plot the emotional intensity curve per action
-    time = np.arange(1, 31)
+    time = np.arange(1, 28)
     plt.plot(time, intensity_values[:, 0], marker='', color='olive', linewidth=2, label='inaction')
     plt.plot(time, intensity_values[:, 1], marker='', color='blue', linewidth=2, label='disengage')
     plt.plot(time, intensity_values[:, 2], marker='', color='red', linewidth=2, label='engage')
