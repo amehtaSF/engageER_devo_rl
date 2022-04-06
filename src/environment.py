@@ -7,17 +7,20 @@ from gym.spaces import Discrete, Tuple, Box, Dict
 
 class Stimulus:
 
-    def __init__(self, id: int, emo_intensity: int, p_recurrence: float):
+    def __init__(self, id: int, emo_intensity: int, p_occurrence: float):
         self.id = id
         self.emo_intensity = emo_intensity
-        self.p_recurrence = p_recurrence
+        self.p_occurrence = p_occurrence
         self.reappraised = False
 
     def get_intensity(self):
         return self.emo_intensity
 
+    def get_p_occurrence(self):
+        return self.p_occurrence
+
     def get_dict(self):
-        return {'id': self.id, 'emo_intensity': self.emo_intensity, "p_recurrence": self.p_recurrence, 'reappraised': self.reappraised}
+        return {'id': self.id, 'emo_intensity': self.emo_intensity, "p_occurrence": self.p_occurrence, 'reappraised': self.reappraised}
 
 
 
@@ -27,7 +30,7 @@ class AgentStatus:
         self.stimuliAppraisals = list()
         self.current_id = None
         self.current_emo_intensity = None
-        self.expected_p_recurrence = None
+        self.expected_p_occurrence = None
         #self.previous_encounter = None
 
     def print_list(self):
@@ -49,7 +52,7 @@ class AgentStatus:
         for i in range(0, len(self.stimuliAppraisals)):
             if self.stimuliAppraisals[i].id == stimulus.id:
                 self.current_emo_intensity = self.stimuliAppraisals[i].emo_intensity
-                self.expected_p_recurrence = self.stimuliAppraisals[i].p_recurrence
+                self.expected_occurrence = self.stimuliAppraisals[i].p_occurrence
                 self.current_id = self.stimuliAppraisals[i].id
 
 
@@ -118,7 +121,7 @@ class EmotionEnv(gym.Env):
         info = None
         reward = self._get_reward()
 
-        return self.agent_status.current_emo_intensity, reward, done, info
+        return self.get_original_intensity(self.agent_status.current_id), reward, done, info
 
     def _inaction(self):
         return self.agent_status
@@ -146,7 +149,8 @@ class EmotionEnv(gym.Env):
 
     def reset(self):
         self.current_timepoint = 1
-        new_stimulus = random.choice(self.stimuli)
+        probs = np.array([stimulus.get_p_occurrence() for stimulus in self.stimuli]).flatten()
+        new_stimulus = np.random.choice(self.stimuli, p=probs)
         self.agent_status.appraise_stimuli(new_stimulus)
 
 
