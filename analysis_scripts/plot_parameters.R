@@ -30,7 +30,7 @@ library("readr")
     }
     plot_list[[i]] <- plot
   }
-  ncol = 2
+  ncol = 1
   nrow =  round((length(data_list) + 1) / ncol)   
   matrixPlot <- cowplot::plot_grid(plotlist = plot_list, nrow = nrow, ncol = ncol)
   png(file_name, width = 1000, height = 1000)
@@ -103,6 +103,6 @@ library("readr")
 
 
 #### GET PLOTS ######
-path <- "../datasets/N_RUNS_b/"
-parameterName <- "N_RUNS_b"
+path <- "../datasets/FiveToTen/"
+parameterName <- "Intensity Min Five Max Ten"
 .getAllPlots(path, parameterName)

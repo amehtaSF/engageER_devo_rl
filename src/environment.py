@@ -95,7 +95,7 @@ class EmotionEnv(gym.Env):
         self.disengage_benefit = disengage_benefit
         self.agent_status = agent_status
         self.current_appraisal = None
-        self.current_timepoint = 1
+        self.current_timepoint = 0
         self.replacement_stimulus_counter = 0
 
     def step(self, action: int) -> tuple:
@@ -104,12 +104,6 @@ class EmotionEnv(gym.Env):
         :param action: which action to take
         :return: state, reward, done, info
         '''
-
-
-        if self.current_timepoint == 9:
-            done = True
-        else:
-            done = False
 
         # Take action
         if action == 1:
@@ -125,13 +119,18 @@ class EmotionEnv(gym.Env):
         info = None
         reward = self._get_reward()
 
-        return self.get_original_intensity(self.agent_status.current_id), reward, done, info
+        if self.current_timepoint == 10:
+            done = True
+        else:
+            done = False
+
+        return self.agent_status.current_emo_intensity, reward, done, info   # self.get_original_intensity(self.agent_status.current_id)
 
     def _inaction(self):
         return self.agent_status
 
     def _disengage(self):
-        if self.current_timepoint != 0:
+        if self.current_timepoint == 3:
             self.agent_status.current_emo_intensity -= self.disengage_benefit
         self.agent_status.current_emo_intensity = np.clip(self.agent_status.current_emo_intensity, 0, 10)
         return self.agent_status
@@ -152,7 +151,7 @@ class EmotionEnv(gym.Env):
         return reward
 
     def reset(self):
-        self.current_timepoint = 1
+        self.current_timepoint = 0
         probs = np.array([stimulus.get_p_occurrence() for stimulus in self.stimuli]).flatten()
         new_stimulus = np.random.choice(self.stimuli, p=probs)
         self.agent_status.appraise_stimuli(new_stimulus)

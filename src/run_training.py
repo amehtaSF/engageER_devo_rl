@@ -21,8 +21,8 @@ logger.setLevel(logging.DEBUG)
 
 simulationValues = [1]# a vector of values that the parameter you want to change should take.
                             # For no simulations, set to [1] and set all paramter values yourself
-#
-# file_name = "N_RUNS_b"      # the first part of the file name, automatically appended with the respective simulation value and data description
+
+# file_name = "FiveToTen"      # the first part of the file name, automatically appended with the respective simulation value and data description
 # #DONT USE NUMBERS IN FILE NAME
 #
 # folder_path = "../datasets/" + file_name   # where to save the data
@@ -31,20 +31,20 @@ simulationValues = [1]# a vector of values that the parameter you want to change
 for sv in simulationValues:
 
     # parameter list; to run simulations, change the desired parameter to "sv"
-    SEED = 12
+    SEED = 1
     N_RUNS = 10000
     N_STIMULI = 2000
     N_ACTIONS = 3
-    STIMULUS_INT_MIN = 1
+    STIMULUS_INT_MIN = 7
     STIMULUS_INT_MAX = 10
 
     alpha = .001
-    gamma = .9
+    gamma = .99
     epsilon = .1
 
     engage_benefit = 0
-    disengage_benefit = .5
-    engage_adaptation = 2
+    disengage_benefit = 3
+    engage_adaptation = 3
 
     random.seed(SEED)
     np.random.seed(SEED)
@@ -82,26 +82,26 @@ for sv in simulationValues:
 
     # Run simulation
     for i in range(N_RUNS):
-        state = env.get_original_intensity(agent_status.current_id)
+        state = env.agent_status.current_emo_intensity #env.get_original_intensity(agent_status.current_id)
         next_state, reward, done, info = env.step(action)
-        #print(state, next_state)
+        print(state, next_state)
         agent.update(state, next_state, action, reward)
         logger.debug(f'action: {action}, reward: {reward}, step: {i}')
-        #print(np.round((i/N_RUNS) * 100, 2), '%')
+        print(np.round((i/N_RUNS) * 100, 2), '%')
         env.render()
         action_counts[i, action] += 1
         reward_counts[i, action] += reward
-        print(agent.qtable)
+        #print(agent.qtable)
         if done:
             env.refresh_stimuli_list()
             env.reset()
-            state = env.get_original_intensity(agent_status.current_id)
+            state = env.agent_status.current_emo_intensity #env.get_original_intensity(agent_status.current_id)
             action = agent.choose_action(state, policy="epsilon_greedy")
 
 
 
     #create data for running the same stimulus 3 times with every action
-    intensity_values = np.zeros((27, N_ACTIONS))
+    intensity_values = np.zeros((30, N_ACTIONS))
     stimuli_list2 = [Stimulus(id=21894721947, emo_intensity=9, p_occurrence=1)]
     agent_status2 = AgentStatus()
     env2 = EmotionEnv(engage_benefit=engage_benefit,
@@ -115,10 +115,10 @@ for sv in simulationValues:
 
     for ac in [0, 1, 2]:
         action = ac
-        for i in np.arange(1, 28, 1):
+        for i in np.arange(0, 30, 1):
             next_state, reward, done, info = env2.step(action)
             logger.debug(f'action: {action}, reward: {reward}, step: {i}')
-            intensity_values[i-1, ac] = agent_status2.current_emo_intensity
+            intensity_values[i, ac] = agent_status2.current_emo_intensity
             print(agent_status2.current_emo_intensity)
             env2.render()
             if done:
@@ -142,18 +142,18 @@ for sv in simulationValues:
 
     # Run simulation
     for i in range(N_RUNS):
-        state = env3.get_original_intensity(agent_status3.current_id)
+        state = env3.agent_status.current_emo_intensity #env3.get_original_intensity(agent_status3.current_id)
         next_state, reward, done, info = env3.step(action)
         agent2.update(state, next_state, action, reward)
         print(np.round((i/N_RUNS) * 100, 2), '%')
         if done:
             env3.refresh_stimuli_list()
             env3.reset()
-            state = env3.get_original_intensity(agent_status.current_id)
+            state =  env3.agent_status.current_emo_intensity #env3.get_original_intensity(agent_status.current_id)
             action = agent2.choose_action(state, policy="epsilon_greedy")
 
     #plot the emotional intensity curve per action
-    time = np.arange(1, 28)
+    time = np.arange(0, 30)
     plt.plot(time, intensity_values[:, 0], marker='', color='olive', linewidth=2, label='inaction')
     plt.plot(time, intensity_values[:, 1], marker='', color='blue', linewidth=2, label='disengage')
     plt.plot(time, intensity_values[:, 2], marker='', color='red', linewidth=2, label='engage')
@@ -194,11 +194,11 @@ for sv in simulationValues:
     # pd.set_option('display.max_colwidth', None)
     #
     #
-    #expected value of action per intensity
+    # #expected value of action per intensity
     df_expected_values = pd.DataFrame({'inaction': agent2.qtable[:,0], 'disengage': agent2.qtable[:,1], 'engage': agent2.qtable[:,2]})
     print(df_expected_values)
-    #file_name0 = folder_path + '/' + file_name + '_' + str(sv) + '_expectedValue' '.csv'
-    #df_expected_values.round(decimals=2).to_csv(file_name0)
+    # file_name0 = folder_path + '/' + file_name + '_' + str(sv) + '_expectedValue' '.csv'
+    # df_expected_values.round(decimals=2).to_csv(file_name0)
     #
     # #to write the actions to csv
     # df1 = pd.DataFrame({'inaction': action_cumsum[:, 0], 'disengage': action_cumsum[:, 1], 'engage': action_cumsum[:, 2]})
