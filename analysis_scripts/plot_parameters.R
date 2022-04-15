@@ -15,18 +15,22 @@ library("readr")
 }
 
 .reshape_wrapper <- function(dataset) {
-  dataset <- tidyr::gather(dataset, action, cumSum, inaction:engage, factor_key = TRUE)
+  dataset <- tidyr::gather(dataset, action, value, inaction:engage, factor_key = TRUE)
   return(dataset)
 }
 
-.matrix_lineplots <- function(data_list, plot_titles, file_name, yLab){
+.matrix_lineplots <- function(data_list, plot_titles, file_name, yLab, expValuePlot = FALSE){
   plot_list <- list()
   for (i in 1:length(data_list)) {
     dataset <- data_list[[i]]
-    plot <- .gg_line_plot(dataset, plot_titles[i], yLab)
+    if (!expValuePlot) {
+      plot <- .gg_line_plot(dataset, plot_titles[i], yLab)
+    } else {
+      plot <- .expValuePlot(dataset, plot_titles[i])
+    }
     plot_list[[i]] <- plot
   }
-  ncol = 2
+  ncol = 1
   nrow =  round((length(data_list) + 1) / ncol)   
   matrixPlot <- cowplot::plot_grid(plotlist = plot_list, nrow = nrow, ncol = ncol)
   png(file_name, width = 1000, height = 1000)
@@ -37,15 +41,27 @@ library("readr")
 
 .gg_line_plot <- function(dataset, title, ylab) {
   plot <-  ggplot2::ggplot() +
-    ggplot2::geom_line(data = dataset, mapping = ggplot2::aes(x = X, y = cumSum, group = action, color = action), size = 1) +
+    ggplot2::geom_line(data = dataset, mapping = ggplot2::aes(x = X, y = value, group = action, color = action), size = 1) +
     ggplot2::xlab("Time in runs") +
     ggplot2::ylab(ylab) +
     ggplot2::ggtitle(title) +
     ggplot2::theme_light()
   if (ylab == "Emo. Intensity"){
-    plot <- plot + ggplot2::geom_vline(xintercept = c(3, 6), size = 1)
+    plot <- plot + ggplot2::geom_vline(xintercept = c(10, 20), size = 1)
   }
   return(plot)
+}
+
+
+.expValuePlot <- function(dataset, title){
+  exp_value_plot <- ggplot2::ggplot() +
+    ggplot2::geom_point(data = dataset, mapping = ggplot2::aes(x = X, y = value, color = action), size = 4) +
+    ggplot2::geom_line(data = dataset, mapping = ggplot2::aes(x = X, y = value, color = action), size = 1) +
+    ggplot2::scale_x_continuous(breaks = 0:10, name = "Stimulus Intensity") +
+    ggplot2::scale_y_continuous(breaks = pretty(dataset$value), name = "Expected Value") +
+    ggplot2::ggtitle(title) +
+    ggplot2::theme_light()
+  return(exp_value_plot)
 }
 
 .getAllPlots <- function(path, parameterName) {
@@ -55,11 +71,13 @@ library("readr")
   all_actionCumSum <- str_which(all_file_names, "actionCumSum") %>% all_file_names[.]
   all_actionTrajectory <- str_which(all_file_names, "actionTrajectory") %>% all_file_names[.]
   all_RewardsCumMean <- str_which(all_file_names, "RewardsCumMean") %>% all_file_names[.]
+  all_ExpValues <- str_which(all_file_names, "expectedValue") %>% all_file_names[.]
   paramterValues <- sort(unique(parse_number(all_file_names)))
   
   all_actionCumSum_data <- .read_all_datasets(path, all_actionCumSum)
   all_actionTrajectory_data <- .read_all_datasets(path, all_actionTrajectory)
   all_RewardsCumMean_data <- .read_all_datasets(path, all_RewardsCumMean)
+  all_expValue_data <- .read_all_datasets(path, all_ExpValues)
   
   fileName <- "../plots/"
   
@@ -74,15 +92,17 @@ library("readr")
   plotTitles_rewards <- paste("Rewards -", parameterName, paramterValues)
   fileNameRewards <- paste0(fileName, parameterName, "_rewards", ".png")
   .matrix_lineplots(all_RewardsCumMean_data, plotTitles_rewards, fileNameRewards, "Cum. Mean")
+  
+  plotTitles_expValues <- paste("Expected Values -", parameterName, paramterValues)
+  fileNameExpValues <- paste0(fileName, parameterName, "_expValues", ".png")
+  .matrix_lineplots(all_expValue_data, plotTitles_expValues, fileNameExpValues, "Cum. Mean", expValuePlot = TRUE)
+  
 }
 
 
 
 
 #### GET PLOTS ######
-path <- "../datasets/engage_adaptation/"
-parameterName <- "engage_adaptation"
+path <- "../datasets/FiveToTen/"
+parameterName <- "Intensity Min Five Max Ten"
 .getAllPlots(path, parameterName)
-
-
-

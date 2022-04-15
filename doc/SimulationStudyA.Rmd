@@ -1,0 +1,663 @@
+---
+title: "Explaining Parameters"
+author: "Jonas Petter"
+date: "3/24/2022"
+output:
+  html_document:
+    toc: true
+    toc_depth: 6
+    toc_float: true
+    theme: united
+    fig_caption: false
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction
+
+- In this grid search I explored the interaction of 4 parameters:
+
+`N_STIMULI = 800, 3000, 20000`
+
+`disengage_benefit = 1, 3, 5`
+
+`engage_adaptation = 1, 3, 5`
+
+`t_disengage = 1, 3, 6`
+
+- `t_disengage` is a new parameter, indicating at which time point disengagement begins to affect the emotion. Note that 
+disengagement has now all its effect in one step, not spread across the 10 time points anymore. Note that engagement still
+begins to affect the emotion trajectory at the time point that is equal to the current intensity of the stimulus. Best to look at the "Trajectory per Action" plots to understand how every action works with the current settings. 
+
+- The plot that counts the actions is now called "Actions per Intensity" and displays how often each actions was chosen 
+for stimuli with different intensities.
+
+- "Learned Values" displays the actual qTable the agent has after running the simulation with the current settings.
+
+- "Objective Values" displays the qTable the agent would have after running the simulation with `N_RUNS = 30000` and 
+`epsilon = 1`, but all other settings staying the same.
+
+- If you are looking for a specific combination, the plots go through the different parameter values in the following order:
+`t_disengage` increases, then `engage_adaptation`, then `disengage_benefit`, then `N_STIMULI`. 
+
+## Results 
+
+With this model we aim to explain the phenomenon that people prefer engagement for low intensity stimuli and disengagement for high intensity stimuli. The model is an agent-based model, in which an agent learns the value of different emotion regulation
+strategies through reinforcement learning. The agent encounters stimuli of differing intensity and then selects an action to reduce its emotional intensity. Then, the agent receives a reward, dependent on how much the intensity was reduced. The rewards are lower when the emotional intensity of the agent is high, thus the agent learns to minimize its emotional intensity. The agent simply learns to behave optimally, given the constraints of the environment. We assume that the same generally holds for people. Thus, to get the agent to select engagement for low intensity stimuli and disengagement for high intensity stimuli, we will have to model the environment in a certain way. We expect, that by clarifying how the model of the environment must look like to reproduce the phenomenon of different strategy preferences per intensity, we can make clear-cut predictions about the underlying mechanisms in the real world.  
+To have explanatory value, this property of strategies working differently for different intensities should follow from another
+mechanism of the model. We could of course create a model in which engagement is the better option but simply stops working at high intensities. This would reproduce the phenomenon of interest, but it would not explain anything beyond what we already 
+know. Thus, we have explored possible secondary mechanisms that could lead to reproduce this phenomenon.  
+The explanatory mechanism we have opted for is a temporal difference between when engagement and disengagement start to work,
+dependent on the intensity of the stimulus. Thus, we propose that engagement takes longer when the emotional intensity is high
+but works rather quickly when the intensity is low. The following graph models the trajectory of emotional intensity after
+encountering a stimulus of intensity 9 (on a scale 0 - 10) three times. Engagement permanently lowers the intensity of that stimulus, so after the first encounter it has a lower starting point. Notice how disengagement always works at the same time, whereas engagement takes long if the intensity is high, but then becomes faster as the intensity is lower.
+
+![trajectoryExample](../plots/GridSearchA/trajectoryExample.PNG)
+
+In this simulation we have explored how the number of different stimuli in the environment, the amount of which enagement/disengagment reduce the emotional intensity and the time point at which disengagement starts to work affect the
+agent's choices of action. This has led to the following conclusions about the current workings of the model:
+
+- The number of stimuli and following the chance to re-encounter a stimulus does not make a relevant difference. Compare for example
+these simulations in which only the number of stimuli differs:
+
+![014](../plots/GridSearchA/SummaryPlotRun14.png)
+
+![041](../plots/GridSearchA/SummaryPlotRun41.png)
+
+![068](../plots/GridSearchA/SummaryPlotRun68.png)
+
+If there are few stimuli, the number of stimuli with intensity 0 increases. But the point at which disengagment is preferred
+over engagement remains the same.
+
+- Timing is the most important factor to produce our expected results. If `t_disengage = 1`, 
+disengagement is almost always the preferred action. This means that for timing alone to explain the phenomenon of different strategy preferences per intensity, engagement has to work faster than disengagement for low intensity stimuli, or have a 
+much larger benefit overall. This produces a very precise prediction to test empirically: Does engagement work faster at 
+low intensities than disengagement? Look at these plots in which `t_disengage = 1`, but the benefits of engagment and disengagement are either equal or one is set to be better.
+
+
+![037](../plots/GridSearchA/SummaryPlotRun37.png)
+![040](../plots/GridSearchA/SummaryPlotRun40.png)
+
+![043](../plots/GridSearchA/SummaryPlotRun43.png)
+
+If `t_disengage = 1`, engagment has to have a much higher benefit to ever be preferred, but we actually see the reverse of the expected pattern:
+
+![034](../plots/GridSearchA/SummaryPlotRun34.png)
+
+
+## Plots
+```{r, echo=F, eval=F}
+for (i in 1:81) {
+  cat(paste0("![", i, "](../plots/GridSearchA/SummaryPlotRun" , i, ".png)\n\n --- \n \n"))
+  }
+```
+
+### N_STIMULI = 800
+
+#### disengage_benefit = 1
+
+##### engage_adaptation = 1
+
+###### t_disengage = 1
+
+![1](../plots/GridSearchA/SummaryPlotRun1.png)
+
+ --- 
+ 
+###### t_disengage = 3
+ 
+![2](../plots/GridSearchA/SummaryPlotRun2.png)
+
+ --- 
+ 
+###### t_disengage = 6
+ 
+![3](../plots/GridSearchA/SummaryPlotRun3.png)
+
+ --- 
+ 
+##### engage_adaptation = 3
+
+###### t_disengage = 1
+ 
+![4](../plots/GridSearchA/SummaryPlotRun4.png)
+
+ --- 
+ 
+###### t_disengage = 3
+ 
+![5](../plots/GridSearchA/SummaryPlotRun5.png)
+
+ --- 
+ 
+###### t_disengage = 6
+ 
+![6](../plots/GridSearchA/SummaryPlotRun6.png)
+
+ --- 
+ 
+##### engage_adaptation = 5
+
+###### t_disengage = 1
+ 
+![7](../plots/GridSearchA/SummaryPlotRun7.png)
+
+ --- 
+ 
+###### t_disengage = 3
+ 
+![8](../plots/GridSearchA/SummaryPlotRun8.png)
+
+ --- 
+ 
+###### t_disengage = 6
+ 
+![9](../plots/GridSearchA/SummaryPlotRun9.png)
+
+ --- 
+ 
+#### disengage_benefit = 3
+ 
+##### engage_adaptation = 1
+
+###### t_disengage = 1
+ 
+![10](../plots/GridSearchA/SummaryPlotRun10.png)
+
+ --- 
+ 
+###### t_disengage = 3
+ 
+![11](../plots/GridSearchA/SummaryPlotRun11.png)
+
+ --- 
+ 
+###### t_disengage = 6
+ 
+![12](../plots/GridSearchA/SummaryPlotRun12.png)
+
+ --- 
+ 
+##### engage_adaptation = 3
+
+###### t_disengage = 1
+ 
+![13](../plots/GridSearchA/SummaryPlotRun13.png)
+
+ --- 
+ 
+###### t_disengage = 3
+ 
+![14](../plots/GridSearchA/SummaryPlotRun14.png)
+
+ --- 
+ 
+###### t_disengage = 6
+ 
+![15](../plots/GridSearchA/SummaryPlotRun15.png)
+
+ --- 
+ 
+##### engage_adaptation = 5
+
+###### t_disengage = 1
+ 
+![16](../plots/GridSearchA/SummaryPlotRun16.png)
+
+ --- 
+ 
+###### t_disengage = 3
+ 
+![17](../plots/GridSearchA/SummaryPlotRun17.png)
+
+ --- 
+ 
+###### t_disengage = 6
+ 
+![18](../plots/GridSearchA/SummaryPlotRun18.png)
+
+ --- 
+ 
+#### disengage_benefit = 5
+ 
+##### engage_adaptation = 1
+
+###### t_disengage = 1
+ 
+![19](../plots/GridSearchA/SummaryPlotRun19.png)
+
+ --- 
+ 
+###### t_disengage = 3
+ 
+![20](../plots/GridSearchA/SummaryPlotRun20.png)
+
+ --- 
+ 
+###### t_disengage = 6
+ 
+![21](../plots/GridSearchA/SummaryPlotRun21.png)
+
+ --- 
+ 
+##### engage_adaptation = 3
+
+###### t_disengage = 1
+ 
+![22](../plots/GridSearchA/SummaryPlotRun22.png)
+
+ --- 
+ 
+###### t_disengage = 3
+ 
+![23](../plots/GridSearchA/SummaryPlotRun23.png)
+
+ --- 
+ 
+###### t_disengage = 6
+ 
+![24](../plots/GridSearchA/SummaryPlotRun24.png)
+
+ --- 
+ 
+##### engage_adaptation = 5
+
+###### t_disengage = 1
+ 
+![25](../plots/GridSearchA/SummaryPlotRun25.png)
+
+ --- 
+ 
+###### t_disengage = 3
+ 
+![26](../plots/GridSearchA/SummaryPlotRun26.png)
+
+ --- 
+ 
+###### t_disengage = 6
+ 
+![27](../plots/GridSearchA/SummaryPlotRun27.png)
+
+ --- 
+ 
+### N_STIMULI = 3000
+
+#### disengage_benefit = 1
+ 
+##### engage_adaptation = 1
+
+###### t_disengage = 1
+ 
+![28](../plots/GridSearchA/SummaryPlotRun28.png)
+
+ --- 
+ 
+###### t_disengage = 3
+ 
+![29](../plots/GridSearchA/SummaryPlotRun29.png)
+
+ --- 
+ 
+###### t_disengage = 6
+ 
+![30](../plots/GridSearchA/SummaryPlotRun30.png)
+
+ --- 
+ 
+##### engage_adaptation = 3
+
+###### t_disengage = 1
+ 
+![31](../plots/GridSearchA/SummaryPlotRun31.png)
+
+ --- 
+ 
+###### t_disengage = 3
+ 
+![32](../plots/GridSearchA/SummaryPlotRun32.png)
+
+ --- 
+ 
+###### t_disengage = 6
+ 
+![33](../plots/GridSearchA/SummaryPlotRun33.png)
+
+ --- 
+ 
+##### engage_adaptation = 5
+
+###### t_disengage = 1
+ 
+![34](../plots/GridSearchA/SummaryPlotRun34.png)
+
+ --- 
+ 
+###### t_disengage = 3
+ 
+![35](../plots/GridSearchA/SummaryPlotRun35.png)
+
+ --- 
+ 
+###### t_disengage = 6
+ 
+![36](../plots/GridSearchA/SummaryPlotRun36.png)
+
+ --- 
+
+#### disengage_benefit = 3
+ 
+##### engage_adaptation = 1
+
+###### t_disengage = 1
+ 
+![37](../plots/GridSearchA/SummaryPlotRun37.png)
+
+ --- 
+ 
+###### t_disengage = 3
+ 
+![38](../plots/GridSearchA/SummaryPlotRun38.png)
+
+ --- 
+ 
+###### t_disengage = 6
+ 
+![39](../plots/GridSearchA/SummaryPlotRun39.png)
+
+ --- 
+ 
+##### engage_adaptation = 3
+
+###### t_disengage = 1
+ 
+![40](../plots/GridSearchA/SummaryPlotRun40.png)
+
+ --- 
+ 
+###### t_disengage = 3
+ 
+![41](../plots/GridSearchA/SummaryPlotRun41.png)
+
+ --- 
+ 
+###### t_disengage = 6
+ 
+![42](../plots/GridSearchA/SummaryPlotRun42.png)
+
+ --- 
+ 
+##### engage_adaptation = 5
+
+###### t_disengage = 1
+ 
+![43](../plots/GridSearchA/SummaryPlotRun43.png)
+
+ --- 
+ 
+###### t_disengage = 3
+ 
+![44](../plots/GridSearchA/SummaryPlotRun44.png)
+
+ --- 
+ 
+###### t_disengage = 6
+ 
+![45](../plots/GridSearchA/SummaryPlotRun45.png)
+
+ --- 
+ 
+#### disengage_benefit = 5
+ 
+##### engage_adaptation = 1
+
+###### t_disengage = 1
+ 
+![46](../plots/GridSearchA/SummaryPlotRun46.png)
+
+ --- 
+ 
+###### t_disengage = 3
+ 
+![47](../plots/GridSearchA/SummaryPlotRun47.png)
+
+ --- 
+ 
+###### t_disengage = 6
+ 
+![48](../plots/GridSearchA/SummaryPlotRun48.png)
+
+ --- 
+ 
+##### engage_adaptation = 3
+
+###### t_disengage = 1
+ 
+![49](../plots/GridSearchA/SummaryPlotRun49.png)
+
+ --- 
+ 
+###### t_disengage = 3
+ 
+![50](../plots/GridSearchA/SummaryPlotRun50.png)
+
+ --- 
+ 
+###### t_disengage = 6
+ 
+![51](../plots/GridSearchA/SummaryPlotRun51.png)
+
+ --- 
+ 
+##### engage_adaptation = 5
+
+###### t_disengage = 1
+ 
+![52](../plots/GridSearchA/SummaryPlotRun52.png)
+
+ --- 
+ 
+###### t_disengage = 3
+ 
+![53](../plots/GridSearchA/SummaryPlotRun53.png)
+
+ --- 
+ 
+###### t_disengage = 6
+ 
+![54](../plots/GridSearchA/SummaryPlotRun54.png)
+
+ --- 
+ 
+### N_STIMULI = 20000
+
+#### disengage_benefit = 1
+ 
+##### engage_adaptation = 1
+
+###### t_disengage = 1
+ 
+![55](../plots/GridSearchA/SummaryPlotRun55.png)
+
+ --- 
+ 
+###### t_disengage = 3
+ 
+![56](../plots/GridSearchA/SummaryPlotRun56.png)
+
+ --- 
+ 
+###### t_disengage = 6
+ 
+![57](../plots/GridSearchA/SummaryPlotRun57.png)
+
+ --- 
+ 
+##### engage_adaptation = 3
+
+###### t_disengage = 1
+ 
+![58](../plots/GridSearchA/SummaryPlotRun58.png)
+
+ --- 
+ 
+###### t_disengage = 3
+ 
+![59](../plots/GridSearchA/SummaryPlotRun59.png)
+
+ --- 
+ 
+###### t_disengage = 6
+ 
+![60](../plots/GridSearchA/SummaryPlotRun60.png)
+
+ --- 
+ 
+##### engage_adaptation = 5
+
+###### t_disengage = 1
+ 
+![61](../plots/GridSearchA/SummaryPlotRun61.png)
+
+ --- 
+ 
+###### t_disengage = 3
+ 
+![62](../plots/GridSearchA/SummaryPlotRun62.png)
+
+ --- 
+ 
+###### t_disengage = 6
+ 
+![63](../plots/GridSearchA/SummaryPlotRun63.png)
+
+ --- 
+ 
+#### disengage_benefit = 3
+ 
+##### engage_adaptation = 1
+
+###### t_disengage = 1
+ 
+![64](../plots/GridSearchA/SummaryPlotRun64.png)
+
+ --- 
+ 
+###### t_disengage = 3
+ 
+![65](../plots/GridSearchA/SummaryPlotRun65.png)
+
+ --- 
+ 
+###### t_disengage = 6
+ 
+![66](../plots/GridSearchA/SummaryPlotRun66.png)
+
+ --- 
+ 
+##### engage_adaptation = 3
+
+###### t_disengage = 1
+ 
+![67](../plots/GridSearchA/SummaryPlotRun67.png)
+
+ --- 
+ 
+###### t_disengage = 3
+ 
+![68](../plots/GridSearchA/SummaryPlotRun68.png)
+
+ --- 
+ 
+###### t_disengage = 6
+ 
+![69](../plots/GridSearchA/SummaryPlotRun69.png)
+
+ --- 
+ 
+##### engage_adaptation = 5
+
+###### t_disengage = 1
+ 
+![70](../plots/GridSearchA/SummaryPlotRun70.png)
+
+ --- 
+ 
+###### t_disengage = 3
+ 
+![71](../plots/GridSearchA/SummaryPlotRun71.png)
+
+ --- 
+ 
+###### t_disengage = 6
+ 
+![72](../plots/GridSearchA/SummaryPlotRun72.png)
+
+ --- 
+ 
+#### disengage_benefit = 5
+ 
+##### engage_adaptation = 1
+
+###### t_disengage = 1
+ 
+![73](../plots/GridSearchA/SummaryPlotRun73.png)
+
+ --- 
+ 
+###### t_disengage = 3
+ 
+![74](../plots/GridSearchA/SummaryPlotRun74.png)
+
+ --- 
+ 
+###### t_disengage = 6
+ 
+![75](../plots/GridSearchA/SummaryPlotRun75.png)
+
+ --- 
+ 
+##### engage_adaptation = 3
+
+###### t_disengage = 1
+ 
+![76](../plots/GridSearchA/SummaryPlotRun76.png)
+
+ --- 
+
+###### t_disengage = 3 
+ 
+![77](../plots/GridSearchA/SummaryPlotRun77.png)
+
+ --- 
+ 
+###### t_disengage = 6
+ 
+![78](../plots/GridSearchA/SummaryPlotRun78.png)
+
+ --- 
+ 
+##### engage_adaptation = 5
+
+###### t_disengage = 1
+ 
+![79](../plots/GridSearchA/SummaryPlotRun79.png)
+
+ --- 
+ 
+###### t_disengage = 3
+ 
+![80](../plots/GridSearchA/SummaryPlotRun80.png)
+
+ --- 
+ 
+###### t_disengage = 6
+ 
+![81](../plots/GridSearchA/SummaryPlotRun81.png)
+
+
+

@@ -69,3 +69,5 @@ class QTableAgent:
         q = self.qtable[state_id, action_id] + self.alpha * (reward + self.gamma * np.max(self.qtable[next_state_id, :]) - self.qtable[state_id, action_id])
         self.qtable[state_id, action_id] = q
 
+
+
