@@ -20,12 +20,12 @@ logger.setLevel(logging.INFO)
 
 #Parameters for grid search
 grid_parameters = {
-    'N_STIMULI': [800],
-    'alpha': [.001],
+    'N_STIMULI': [300],
+    'alpha': [.01],
     'gamma': [.99],
-    'epsilon': [.1],
+    'epsilon': [1],
     'disengage_benefit': [3],
-    'engage_adaptation': [3],
+    'engage_adaptation': [0],
     't_disengage': [1]
     }
 
@@ -43,17 +43,18 @@ grid = grid.reshape(n_grid_parameters, int(grid.size/n_grid_parameters)).T
 
 for row in np.arange(0, len(grid)):
 
-    # parameter list; to run simulations, change the desired parameter to "sv"
     SEED = 12
-    N_RUNS = 50000
+    N_RUNS = 60000
     N_STIMULI = int(grid[row, 0])
     N_ACTIONS = 3
     STIMULUS_INT_MIN = 1
     STIMULUS_INT_MAX = 10
+    DECAY_TIME = N_RUNS / 2    # The first half of the runs is used for exploring
 
     alpha = grid[row, 1]
     gamma = grid[row, 2]
     epsilon = grid[row, 3]
+    DECAY_FACTOR = epsilon/DECAY_TIME  # how much epsilon is lowered each step
 
     disengage_benefit = int(grid[row, 4])
     engage_adaptation = int(grid[row, 5])
@@ -107,10 +108,13 @@ for row in np.arange(0, len(grid)):
         #env.render()
         action_counts[state, action] += 1
         reward_counts[i, action] += reward
+        state = env.agent_status.current_emo_intensity  # env.get_original_intensity(agent_status.current_id)
+        action = agent.choose_action(state, policy="epsilon_greedy")
+        if epsilon > 0:
+            epsilon -= DECAY_FACTOR
+            print(epsilon)
         #print(agent.qtable)
-        if done:
-            state = env.agent_status.current_emo_intensity #env.get_original_intensity(agent_status.current_id)
-            action = agent.choose_action(state, policy="epsilon_greedy")
+
 
     #create data for running the same stimulus 3 times with every action
     intensity_values = np.zeros((30, N_ACTIONS))

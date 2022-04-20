@@ -33,6 +33,7 @@ class AgentStatus:
         self.current_id = None
         self.current_emo_intensity = None
         self.expected_p_occurrence = None
+        self.current_encounter_counter = 0
         #self.previous_encounter = None
 
     def print_list(self):
@@ -57,6 +58,7 @@ class AgentStatus:
                 self.expected_occurrence = self.stimuliAppraisals[i].p_occurrence
                 self.current_id = self.stimuliAppraisals[i].id
                 self.stimuliAppraisals[i].encounter_counter += 1
+                self.current_encounter_counter = self.stimuliAppraisals[i].encounter_counter
 
 
 
@@ -96,7 +98,6 @@ class EmotionEnv(gym.Env):
         self.disengage_benefit = disengage_benefit
         self.agent_status = agent_status
         self.current_appraisal = None
-        self.current_timepoint = 0
         self.replacement_stimulus_counter = 0
         self.t_disengage = t_disengage
 
@@ -106,8 +107,6 @@ class EmotionEnv(gym.Env):
         :param action: which action to take
         :return: state, reward, done, info
         '''
-
-        self.current_timepoint += 1
 
         # Take action
         if action == 1:
@@ -123,12 +122,9 @@ class EmotionEnv(gym.Env):
         info = None
         reward = self._get_reward()
 
-        if self.current_timepoint == 10:
-            done = True
-            self.reset()
-            self.refresh_stimuli_list()
-        else:
-            done = False
+        self.reset()
+        self.refresh_stimuli_list()
+        done = False
 
         return self.get_original_intensity(self.agent_status.current_id), reward, done, info   #
 
@@ -136,8 +132,7 @@ class EmotionEnv(gym.Env):
         return self.agent_status
 
     def _disengage(self):
-        if self.current_timepoint == self.t_disengage:
-            self.agent_status.current_emo_intensity -= self.disengage_benefit
+        self.agent_status.current_emo_intensity -= self.disengage_benefit
         self.agent_status.current_emo_intensity = np.clip(self.agent_status.current_emo_intensity, 0, 10)
         return self.agent_status
 
@@ -145,35 +140,31 @@ class EmotionEnv(gym.Env):
         for i in range(0, len(self.agent_status.stimuliAppraisals)):
             if self.agent_status.stimuliAppraisals[i].id == self.agent_status.current_id:
                 self.current_appraisal = self.agent_status.stimuliAppraisals[i]
-        if self.current_timepoint == self.t_disengage:          #self.current_appraisal.emo_intensity == self.current_timepoint
-            self.agent_status.current_emo_intensity -= self.engage_benefit
-        if self.current_timepoint == 10:
-            self.current_appraisal.emo_intensity -= self.engage_adaptation
-            self.current_appraisal.emo_intensity = np.clip(self.current_appraisal.emo_intensity, 0, 10)
-            self.current_appraisal.reappraised = True
+        self.agent_status.current_emo_intensity -= self.engage_benefit
+        self.current_appraisal.emo_intensity -= self.engage_adaptation
+        self.current_appraisal.emo_intensity = np.clip(self.current_appraisal.emo_intensity, 0, 10)
+        self.current_appraisal.reappraised = True
         self.agent_status.current_emo_intensity = np.clip(self.agent_status.current_emo_intensity, 0, 10)
         return self.agent_status
 
     def _get_reward(self):
-        reward = -self.agent_status.current_emo_intensity
+        reward = 10 - self.agent_status.current_emo_intensity
         return reward
 
     def reset(self):
-        self.current_timepoint = 0
         probs = np.array([stimulus.get_p_occurrence() for stimulus in self.stimuli]).flatten()
         new_stimulus = np.random.choice(self.stimuli, p=probs)
         self.agent_status.appraise_stimuli(new_stimulus)
 
 # stimulus gets replaced with a new stimulus with the same probability of occurrence and intensity, but new id
     def refresh_stimuli_list(self):
-        for i in range(0, len(self.agent_status.stimuliAppraisals)):
-            if self.agent_status.stimuliAppraisals[i].encounter_counter == 5:
-                id_to_remove = self.agent_status.stimuliAppraisals[i].id
-                for j in range(0, len(self.stimuli)):
-                    if self.stimuli[j].id == id_to_remove:
-                        new_id = len(self.stimuli) + self.replacement_stimulus_counter
-                        self.replacement_stimulus_counter += 1
-                        self.stimuli[j] = Stimulus(id=new_id, emo_intensity=self.stimuli[j].emo_intensity, p_occurrence=self.stimuli[j].p_occurrence)
+        if self.agent_status.current_encounter_counter == 5:
+            id_to_remove = self.agent_status.current_id
+            for j in range(0, len(self.stimuli)):
+                if self.stimuli[j].id == id_to_remove:
+                    new_id = len(self.stimuli) + self.replacement_stimulus_counter
+                    self.replacement_stimulus_counter += 1
+                    self.stimuli[j] = Stimulus(id=new_id, emo_intensity=self.stimuli[j].emo_intensity, p_occurrence=self.stimuli[j].p_occurrence)
 
 
 
@@ -195,6 +186,6 @@ class EmotionEnv(gym.Env):
             if self.agent_status.stimuliAppraisals[i].id == self.agent_status.current_id:
                 self.current_appraisal = self.agent_status.stimuliAppraisals[i]
 
-        print({'timepoint': self.current_timepoint, 'emo_intensity': self.agent_status.current_emo_intensity,
+        print({'timepoint': 1, 'emo_intensity': self.agent_status.current_emo_intensity,
                'stimulus id': self.agent_status.current_id})
         print(self.current_appraisal.get_dict())
