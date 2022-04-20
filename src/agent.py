@@ -48,7 +48,7 @@ class QTableAgent:
             action = random.choices(np.arange(self.n_actions), weights=softmax(self.qtable[state_id, :]))[0]
         elif policy == 'epsilon_greedy':  # Epsilon-greedy policy
             if np.random.rand(1)[0] > self.epsilon:
-                action = np.argmax(self.qtable[state_id, :])
+                action = np.random.choice(np.flatnonzero(self.qtable[state_id, :] == self.qtable[state_id, :].max()))
             else:
                 action = np.random.randint(0, self.n_actions)
         elif policy == 'ucb':  # Upper-confidence bound action selection, p35 sutton & barto
