@@ -125,6 +125,8 @@ class EmotionEnv(gym.Env):
 
         if self.current_timepoint == 10:
             done = True
+            self.reset()
+            self.refresh_stimuli_list()
         else:
             done = False
 
@@ -143,7 +145,7 @@ class EmotionEnv(gym.Env):
         for i in range(0, len(self.agent_status.stimuliAppraisals)):
             if self.agent_status.stimuliAppraisals[i].id == self.agent_status.current_id:
                 self.current_appraisal = self.agent_status.stimuliAppraisals[i]
-        if self.current_appraisal.emo_intensity == self.current_timepoint:
+        if self.current_timepoint == self.t_disengage:          #self.current_appraisal.emo_intensity == self.current_timepoint
             self.agent_status.current_emo_intensity -= self.engage_benefit
         if self.current_timepoint == 10:
             self.current_appraisal.emo_intensity -= self.engage_adaptation

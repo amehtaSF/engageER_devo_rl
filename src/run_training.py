@@ -20,13 +20,13 @@ logger.setLevel(logging.INFO)
 
 #Parameters for grid search
 grid_parameters = {
-    'N_STIMULI': [800, 3000, 20000],
+    'N_STIMULI': [800],
     'alpha': [.001],
     'gamma': [.99],
     'epsilon': [.1],
-    'disengage_benefit': [1, 3, 5],
-    'engage_adaptation': [1, 3, 5],
-    't_disengage': [1, 3, 6]
+    'disengage_benefit': [3],
+    'engage_adaptation': [3],
+    't_disengage': [1]
     }
 
 
@@ -36,16 +36,16 @@ grid = np.array(np.meshgrid(grid_parameters['N_STIMULI'], grid_parameters['alpha
                             grid_parameters['t_disengage']))
 grid = grid.reshape(n_grid_parameters, int(grid.size/n_grid_parameters)).T
 
-file_name = "GridSearchA"      # the first part of the file name, automatically appended with the respective simulation value and data description
-                                    #DONT USE NUMBERS IN FILE NAME
-folder_path = "../datasets/" + file_name   # where to save the data
-os.makedirs(folder_path)     # create a folder
+# file_name = "GridSearchA"      # the first part of the file name, automatically appended with the respective simulation value and data description
+#                                     #DONT USE NUMBERS IN FILE NAME
+# folder_path = "../datasets/" + file_name   # where to save the data
+# os.makedirs(folder_path)     # create a folder
 
 for row in np.arange(0, len(grid)):
 
     # parameter list; to run simulations, change the desired parameter to "sv"
-    SEED = 123
-    N_RUNS = 10000
+    SEED = 12
+    N_RUNS = 50000
     N_STIMULI = int(grid[row, 0])
     N_ACTIONS = 3
     STIMULUS_INT_MIN = 1
@@ -57,7 +57,7 @@ for row in np.arange(0, len(grid)):
 
     disengage_benefit = int(grid[row, 4])
     engage_adaptation = int(grid[row, 5])
-    engage_benefit = engage_adaptation
+    engage_benefit = 3
     t_disengage = int(grid[row, 6])
 
     random.seed(SEED)
@@ -89,7 +89,7 @@ for row in np.arange(0, len(grid)):
 
 
 
-    action = 1 # the first action
+    action = 2 # the first action
     state = env.agent_status.current_emo_intensity    #the first state
 
     # Record actions and rewards
@@ -109,8 +109,6 @@ for row in np.arange(0, len(grid)):
         reward_counts[i, action] += reward
         #print(agent.qtable)
         if done:
-            env.refresh_stimuli_list()
-            env.reset()
             state = env.agent_status.current_emo_intensity #env.get_original_intensity(agent_status.current_id)
             action = agent.choose_action(state, policy="epsilon_greedy")
 
@@ -134,37 +132,35 @@ for row in np.arange(0, len(grid)):
             next_state, reward, done, info = env2.step(action)
             logger.debug(f'action: {action}, reward: {reward}, step: {i}')
             intensity_values[i, ac] = agent_status2.current_emo_intensity
-            #env2.render()
-            if done:
-                env2.reset()
+            env2.render()
 
-    #Create balanced qTable with current settings
-    agent_status3 = AgentStatus()
-
-    env3 = EmotionEnv(engage_benefit=engage_benefit,
-                             disengage_benefit=disengage_benefit,
-                             engage_adaptation=engage_adaptation,
-                             t_disengage=t_disengage,
-                             stimuli=stimuli_list,
-                             agent_status=agent_status3
-                             )
-    env3.reset()
-
-    agent2 = QTableAgent(11, n_actions=N_ACTIONS, alpha=alpha, gamma=gamma, epsilon=1)  # for balanced qTable
-
-    action = 0  # the first action
-
-    # Run simulation
-    for i in range(30000):
-        next_state, reward, done, info = env3.step(action)
-        agent2.update(state, next_state, action, reward)
-        if i % 100 == 0:
-            print(row, '/', len(grid), '_____', round((i + N_RUNS) /(N_RUNS + 30000) * 100, 2), '%', sep='')
-        if done:
-            env3.refresh_stimuli_list()
-            env3.reset()
-            state = env3.agent_status.current_emo_intensity #env3.get_original_intensity(agent_status.current_id)
-            action = agent2.choose_action(state, policy="epsilon_greedy")
+    # #Create balanced qTable with current settings
+    # agent_status3 = AgentStatus()
+    #
+    # env3 = EmotionEnv(engage_benefit=engage_benefit,
+    #                          disengage_benefit=disengage_benefit,
+    #                          engage_adaptation=engage_adaptation,
+    #                          t_disengage=t_disengage,
+    #                          stimuli=stimuli_list,
+    #                          agent_status=agent_status3
+    #                          )
+    # env3.reset()
+    #
+    # agent2 = QTableAgent(11, n_actions=N_ACTIONS, alpha=alpha, gamma=gamma, epsilon=1)  # for balanced qTable
+    #
+    # action = 0  # the first action
+    #
+    # # Run simulation
+    # for i in range(30000):
+    #     next_state, reward, done, info = env3.step(action)
+    #     agent2.update(state, next_state, action, reward)
+    #     if i % 100 == 0:
+    #         print(row, '/', len(grid), '_____', round((i + N_RUNS) /(N_RUNS + 30000) * 100, 2), '%', sep='')
+    #     if done:
+    #         env3.refresh_stimuli_list()
+    #         env3.reset()
+    #         state = env3.agent_status.current_emo_intensity #env3.get_original_intensity(agent_status.current_id)
+    #         action = agent2.choose_action(state, policy="epsilon_greedy")
 
     #plot the emotional intensity curve per action
     time = np.arange(0, 30)
@@ -174,7 +170,7 @@ for row in np.arange(0, len(grid)):
     plt.legend()
     ax = plt.gca()
     ax.set_ylim([0, 10])
-    #plt.show()
+    plt.show()
 
     # Plot choices
     states = np.arange(0, 11)
@@ -183,7 +179,7 @@ for row in np.arange(0, len(grid)):
     plt.plot(states, action_counts[:, 1], marker='', color='blue', linewidth=2, label='disengage')
     plt.plot(states, action_counts[:, 2], marker='', color='red', linewidth=2, label='engage')
     plt.legend()
-    #plt.show()
+    plt.show()
 
 
     # plot rewards
@@ -197,52 +193,52 @@ for row in np.arange(0, len(grid)):
     plt.plot(time, reward_cumsum[:, 1]/disengage_timeline, marker='', color='blue', linewidth=2, label='disengage')
     plt.plot(time, reward_cumsum[:, 2]/engage_timeline, marker='', color='red', linewidth=2, label='engage')
     plt.legend()
-    #plt.show()
+    plt.show()
 
 
 
-
-
-    #set options for pandas
-    pd.set_option('display.max_columns', None)
-    pd.set_option('display.width', None)
-    pd.set_option('display.max_colwidth', None)
-
-
-    df_parameters = pd.DataFrame({'SEED': SEED, 'N_RUNS': N_RUNS, 'N_STIMULI': N_STIMULI, 'STIMULUS_INT_MIN': STIMULUS_INT_MIN,
-                                  'STIMULUS_INT_MAX': STIMULUS_INT_MAX,'alpha': alpha, 'gamma': gamma, 'epsilon': epsilon,
-                                  'disengage_benefit': disengage_benefit, 'engage_adaptation': engage_adaptation, 't_disengage': t_disengage}, index=[0])
-    file_name0 = folder_path + '/' + file_name + '_' + str(row) + '_parameters' '.csv'
-    df_parameters.to_csv(file_name0)
-
-
-    #to write the actions to csv
-    df1 = pd.DataFrame({'inaction': action_counts[:, 0], 'disengage': action_counts[:, 1], 'engage': action_counts[:, 2]})
-    file_name1 = folder_path + '/' + file_name + '_' + str(row) + '_actionPerIntensity' '.csv'
-    df1.to_csv(file_name1)
-
-
-    # #To write the rewards to csv
-    # df2 = pd.DataFrame({'inaction': reward_cumsum[:, 0]/inaction_timeline, 'disengage': reward_cumsum[:, 1]/disengage_timeline,
-    #                     'engage': reward_cumsum[:, 2]/engage_timeline})
-    # file_name2 = folder_path + '/' + file_name + '_' + str(sv) + '_RewardsCumMean' '.csv'
-    # df2.to_csv(file_name2)
     #
     #
-    #To write action trajectory to csv
-    df3 = pd.DataFrame({'inaction': intensity_values[:, 0], 'disengage': intensity_values[:, 1], 'engage': intensity_values[:, 2]})
-    file_name3 = folder_path + '/' + file_name + '_' + str(row) + '_actionTrajectory' '.csv'
-    df3.to_csv(file_name3)
-
-    # #expected value of action per intensity
-    df_learned_values = pd.DataFrame(
-        {'inaction': agent.qtable[:, 0], 'disengage': agent.qtable[:, 1], 'engage': agent.qtable[:, 2]})
-    file_name4 = folder_path + '/' + file_name + '_' + str(row) + '_learnedValue' '.csv'
-    df_learned_values.round(decimals=2).to_csv(file_name4)
-
-    # #expected value of action per intensity
-    df_expected_values = pd.DataFrame(
-        {'inaction': agent2.qtable[:, 0], 'disengage': agent2.qtable[:, 1], 'engage': agent2.qtable[:, 2]})
-    file_name5 = folder_path + '/' + file_name + '_' + str(row) + '_expectedValue' '.csv'
-    df_expected_values.round(decimals=2).to_csv(file_name5)
+    # #set options for pandas
+    # pd.set_option('display.max_columns', None)
+    # pd.set_option('display.width', None)
+    # pd.set_option('display.max_colwidth', None)
     #
+    #
+    # df_parameters = pd.DataFrame({'SEED': SEED, 'N_RUNS': N_RUNS, 'N_STIMULI': N_STIMULI, 'STIMULUS_INT_MIN': STIMULUS_INT_MIN,
+    #                               'STIMULUS_INT_MAX': STIMULUS_INT_MAX,'alpha': alpha, 'gamma': gamma, 'epsilon': epsilon,
+    #                               'disengage_benefit': disengage_benefit, 'engage_adaptation': engage_adaptation, 't_disengage': t_disengage}, index=[0])
+    # file_name0 = folder_path + '/' + file_name + '_' + str(row) + '_parameters' '.csv'
+    # df_parameters.to_csv(file_name0)
+    #
+    #
+    # #to write the actions to csv
+    # df1 = pd.DataFrame({'inaction': action_counts[:, 0], 'disengage': action_counts[:, 1], 'engage': action_counts[:, 2]})
+    # file_name1 = folder_path + '/' + file_name + '_' + str(row) + '_actionPerIntensity' '.csv'
+    # df1.to_csv(file_name1)
+    #
+    #
+    # # #To write the rewards to csv
+    # # df2 = pd.DataFrame({'inaction': reward_cumsum[:, 0]/inaction_timeline, 'disengage': reward_cumsum[:, 1]/disengage_timeline,
+    # #                     'engage': reward_cumsum[:, 2]/engage_timeline})
+    # # file_name2 = folder_path + '/' + file_name + '_' + str(sv) + '_RewardsCumMean' '.csv'
+    # # df2.to_csv(file_name2)
+    # #
+    # #
+    # #To write action trajectory to csv
+    # df3 = pd.DataFrame({'inaction': intensity_values[:, 0], 'disengage': intensity_values[:, 1], 'engage': intensity_values[:, 2]})
+    # file_name3 = folder_path + '/' + file_name + '_' + str(row) + '_actionTrajectory' '.csv'
+    # df3.to_csv(file_name3)
+    #
+    # # #expected value of action per intensity
+    # df_learned_values = pd.DataFrame(
+    #     {'inaction': agent.qtable[:, 0], 'disengage': agent.qtable[:, 1], 'engage': agent.qtable[:, 2]})
+    # file_name4 = folder_path + '/' + file_name + '_' + str(row) + '_learnedValue' '.csv'
+    # df_learned_values.round(decimals=2).to_csv(file_name4)
+    #
+    # # #expected value of action per intensity
+    # df_expected_values = pd.DataFrame(
+    #     {'inaction': agent2.qtable[:, 0], 'disengage': agent2.qtable[:, 1], 'engage': agent2.qtable[:, 2]})
+    # file_name5 = folder_path + '/' + file_name + '_' + str(row) + '_expectedValue' '.csv'
+    # df_expected_values.round(decimals=2).to_csv(file_name5)
+    # #
