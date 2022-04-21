@@ -21,8 +21,8 @@ logger.setLevel(logging.INFO)
 #Parameters for grid search
 grid_parameters = {
     'N_STIMULI': [300],
-    'alpha': [.01],
-    'gamma': [.99],
+    'alpha': [.1],
+    'gamma': [.8],
     'epsilon': [1],
     'disengage_benefit': [3],
     'engage_adaptation': [0],
@@ -43,13 +43,13 @@ grid = grid.reshape(n_grid_parameters, int(grid.size/n_grid_parameters)).T
 
 for row in np.arange(0, len(grid)):
 
-    SEED = 12
+    SEED = 127
     N_RUNS = 60000
     N_STIMULI = int(grid[row, 0])
     N_ACTIONS = 3
     STIMULUS_INT_MIN = 1
     STIMULUS_INT_MAX = 10
-    DECAY_TIME = N_RUNS / 2    # The first half of the runs is used for exploring
+    DECAY_TIME = N_RUNS * .7    # How much of the total run is used for exploring
 
     alpha = grid[row, 1]
     gamma = grid[row, 2]
@@ -110,9 +110,8 @@ for row in np.arange(0, len(grid)):
         reward_counts[i, action] += reward
         state = env.agent_status.current_emo_intensity  # env.get_original_intensity(agent_status.current_id)
         action = agent.choose_action(state, policy="epsilon_greedy")
-        if epsilon > 0:
-            epsilon -= DECAY_FACTOR
-            print(epsilon)
+        if agent.epsilon > 0.1:   #cap epsilon at .1
+            agent.epsilon -= DECAY_FACTOR
         #print(agent.qtable)
 
 
