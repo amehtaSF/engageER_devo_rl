@@ -79,7 +79,6 @@ class EmotionEnv(gym.Env):
                  engage_benefit: float,
                  disengage_benefit: float,
                  engage_adaptation: float,
-                 t_disengage: float,
                  stimuli: list,
                  agent_status: AgentStatus
                  ):
@@ -99,7 +98,6 @@ class EmotionEnv(gym.Env):
         self.agent_status = agent_status
         self.current_appraisal = None
         self.replacement_stimulus_counter = 0
-        self.t_disengage = t_disengage
 
     def step(self, action: int) -> tuple:
         '''
