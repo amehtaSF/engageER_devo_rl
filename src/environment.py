@@ -154,6 +154,8 @@ class EmotionEnv(gym.Env):
     def reset(self):
         probs = np.array([stimulus.get_p_occurrence() for stimulus in self.stimuli]).flatten()
         new_stimulus = np.random.choice(self.stimuli, p=probs)
+        while new_stimulus.id == self.agent_status.current_id:
+            new_stimulus = np.random.choice(self.stimuli, p=probs)
         self.agent_status.appraise_stimuli(new_stimulus)
 
 # stimulus gets replaced with a new stimulus with the same probability of occurrence and intensity, but new id
