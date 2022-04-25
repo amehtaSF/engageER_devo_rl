@@ -1,0 +1,2 @@
+,SEED,N_RUNS,N_STIMULI,STIMULUS_INT_MIN,STIMULUS_INT_MAX,alpha,gamma,epsilon,engage_and_disengage_benefit:
+0,12,30000,300,1,10,0.1,0.9,1.0,1.0

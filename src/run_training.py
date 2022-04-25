@@ -29,30 +29,31 @@ logger.setLevel(logging.INFO)
 
 #Parameters for grid search
 grid_parameters = {
-    'N_STIMULI': [300],
+    'N_STIMULI': [600],
     'alpha': [.1],
     'gamma': [.9],
     'epsilon': [1],
-    'disengage_and_engage_benefit': [1, 3, 5],
-    'engage_adaptation': [0],
+    'disengage_benefit': [3],
+    'engage_benefit': [3],
+    'engage_adaptation': [2],
     'SEED': np.arange(1, 31)
     }
 
 
 n_grid_parameters = len(grid_parameters)
 grid = np.array(np.meshgrid(grid_parameters['N_STIMULI'], grid_parameters['alpha'], grid_parameters['gamma'],
-                            grid_parameters['epsilon'], grid_parameters['disengage_and_engage_benefit'], grid_parameters['engage_adaptation'],
-                            grid_parameters['SEED']))
+                            grid_parameters['epsilon'], grid_parameters['disengage_benefit'], grid_parameters['engage_benefit'],
+                            grid_parameters['engage_adaptation'], grid_parameters['SEED']))
 grid = grid.reshape(n_grid_parameters, int(grid.size/n_grid_parameters)).T
 
-file_name = "GridSearchEqualBenefits"      # the first part of the file name, automatically appended with the respective simulation value and data description
+file_name = "GridSearchEqualButAdaptation"      # the first part of the file name, automatically appended with the respective simulation value and data description
                                     #DONT USE NUMBERS IN FILE NAME
 folder_path = "../datasets/" + file_name   # where to save the data
 os.makedirs(folder_path)     # create a folder
 
 for row in np.arange(0, len(grid)):
 
-    SEED = int(grid[row, 6])
+    SEED = int(grid[row, 7])
     N_RUNS = 30000
     N_STIMULI = int(grid[row, 0])
     N_ACTIONS = 3
@@ -67,8 +68,8 @@ for row in np.arange(0, len(grid)):
     DECAY_FACTOR = epsilon/DECAY_TIME  # how much epsilon is lowered each step
 
     disengage_benefit = grid[row, 4]
-    engage_adaptation = int(grid[row, 5])
-    engage_benefit = grid[row, 4]
+    engage_adaptation = grid[row, 6]
+    engage_benefit = grid[row, 5]
 
     random.seed(SEED)
     np.random.seed(SEED)
@@ -240,11 +241,11 @@ for row in np.arange(0, len(grid)):
     # file_name3 = folder_path + '/' + file_name + '_' + str(row) + '_actionTrajectory' '.csv'
     # df3.to_csv(file_name3)
 
-    #expected value of action per intensity
-    df_learned_values = pd.DataFrame(
-        {'inaction': agent.qtable[:, 0], 'disengage': agent.qtable[:, 1], 'engage': agent.qtable[:, 2]})
-    file_name4 = folder_path + '/' + file_name + '_' + str(row) + '_learnedValue' '.csv'
-    df_learned_values.round(decimals=2).to_csv(file_name4)
+    # #expected value of action per intensity
+    # df_learned_values = pd.DataFrame(
+    #     {'inaction': agent.qtable[:, 0], 'disengage': agent.qtable[:, 1], 'engage': agent.qtable[:, 2]})
+    # file_name4 = folder_path + '/' + file_name + '_' + str(row) + '_learnedValue' '.csv'
+    # df_learned_values.round(decimals=2).to_csv(file_name4)
     #
     # # #expected value of action per intensity
     # df_expected_values = pd.DataFrame(
