@@ -29,14 +29,14 @@ logger.setLevel(logging.INFO)
 
 #Parameters for grid search
 grid_parameters = {
-    'N_STIMULI': [600],
+    'N_STIMULI': [300],
     'alpha': [.1],
     'gamma': [.9],
     'epsilon': [1],
     'disengage_benefit': [3],
     'engage_benefit': [3],
     'engage_adaptation': [2],
-    'SEED': np.arange(1, 31)
+    'SEED': [123]
     }
 
 
@@ -46,15 +46,15 @@ grid = np.array(np.meshgrid(grid_parameters['N_STIMULI'], grid_parameters['alpha
                             grid_parameters['engage_adaptation'], grid_parameters['SEED']))
 grid = grid.reshape(n_grid_parameters, int(grid.size/n_grid_parameters)).T
 
-file_name = "GridSearchEqualButAdaptation"      # the first part of the file name, automatically appended with the respective simulation value and data description
-                                    #DONT USE NUMBERS IN FILE NAME
-folder_path = "../datasets/" + file_name   # where to save the data
-os.makedirs(folder_path)     # create a folder
+# file_name = "GridSearchEqualButAdaptation"      # the first part of the file name, automatically appended with the respective simulation value and data description
+#                                     #DONT USE NUMBERS IN FILE NAME
+# folder_path = "../datasets/" + file_name   # where to save the data
+# os.makedirs(folder_path)     # create a folder
 
 for row in np.arange(0, len(grid)):
 
     SEED = int(grid[row, 7])
-    N_RUNS = 30000
+    N_RUNS = 60000
     N_STIMULI = int(grid[row, 0])
     N_ACTIONS = 3
     N_STATES = 3
@@ -105,13 +105,16 @@ for row in np.arange(0, len(grid)):
     # Record actions and rewards
     action_counts = np.zeros((N_STATES, agent.n_actions))
     reward_counts = np.zeros((N_RUNS, agent.n_actions))
+    qTable_update_amount = []
 
     # Run simulation
     for i in range(N_RUNS):
         next_state, reward, done, info = env.step(action)
         next_state = bin_low_high(next_state)
         #print(state, next_state)
+        previous_qTable_sum = np.sum(agent.qtable)  # qTable values sum before updating
         agent.update(state, next_state, action, reward)
+        qTable_update_amount.append(np.sum(agent.qtable) - previous_qTable_sum)  #how much the qTable changed from the update
         logger.debug(f'action: {action}, reward: {reward}, step: {i}')
         if i % 100 == 0:
             print(row, '/', len(grid), '_____', round(i / (N_RUNS) * 100, 2) , '%', sep='')
@@ -190,7 +193,13 @@ for row in np.arange(0, len(grid)):
     plt.plot(states, action_counts[:, 1], marker='', color='blue', linewidth=2, label='disengage')
     plt.plot(states, action_counts[:, 2], marker='', color='red', linewidth=2, label='engage')
     plt.legend()
-    #plt.show()
+    plt.show()
+
+
+    # plot qTable update amount
+    time = np.arange(0, N_RUNS)
+    plt.plot(time, qTable_update_amount, marker='', color='olive', linewidth=2)
+    plt.show()
 
 
     # plot rewards
@@ -208,25 +217,25 @@ for row in np.arange(0, len(grid)):
 
 
 
-    #
-    #
+
+
     #set options for pandas
     pd.set_option('display.max_columns', None)
     pd.set_option('display.width', None)
     pd.set_option('display.max_colwidth', None)
 
-
-    df_parameters = pd.DataFrame({'SEED': SEED, 'N_RUNS': N_RUNS, 'N_STIMULI': N_STIMULI, 'STIMULUS_INT_MIN': STIMULUS_INT_MIN,
-                                  'STIMULUS_INT_MAX': STIMULUS_INT_MAX,'alpha': alpha, 'gamma': gamma, 'epsilon': epsilon,
-                                  'engage_and_disengage_benefit:': engage_benefit, 'SEED': SEED}, index=[0])
-    file_name0 = folder_path + '/' + file_name + '_' + str(row) + '_parameters' '.csv'
-    df_parameters.to_csv(file_name0)
-
-
-    #to write the actions to csv
-    df1 = pd.DataFrame({'inaction': action_counts[:, 0], 'disengage': action_counts[:, 1], 'engage': action_counts[:, 2]})
-    file_name1 = folder_path + '/' + file_name + '_' + str(row) + '_actionPerIntensity' '.csv'
-    df1.to_csv(file_name1)
+    #
+    # df_parameters = pd.DataFrame({'SEED': SEED, 'N_RUNS': N_RUNS, 'N_STIMULI': N_STIMULI, 'STIMULUS_INT_MIN': STIMULUS_INT_MIN,
+    #                               'STIMULUS_INT_MAX': STIMULUS_INT_MAX,'alpha': alpha, 'gamma': gamma, 'epsilon': epsilon,
+    #                               'engage_and_disengage_benefit:': engage_benefit, 'SEED': SEED}, index=[0])
+    # file_name0 = folder_path + '/' + file_name + '_' + str(row) + '_parameters' '.csv'
+    # df_parameters.to_csv(file_name0)
+    #
+    #
+    # #to write the actions to csv
+    # df1 = pd.DataFrame({'inaction': action_counts[:, 0], 'disengage': action_counts[:, 1], 'engage': action_counts[:, 2]})
+    # file_name1 = folder_path + '/' + file_name + '_' + str(row) + '_actionPerIntensity' '.csv'
+    # df1.to_csv(file_name1)
 
 
     # #To write the rewards to csv
@@ -241,9 +250,10 @@ for row in np.arange(0, len(grid)):
     # file_name3 = folder_path + '/' + file_name + '_' + str(row) + '_actionTrajectory' '.csv'
     # df3.to_csv(file_name3)
 
-    # #expected value of action per intensity
-    # df_learned_values = pd.DataFrame(
-    #     {'inaction': agent.qtable[:, 0], 'disengage': agent.qtable[:, 1], 'engage': agent.qtable[:, 2]})
+    #learned value of action per intensity
+    df_learned_values = pd.DataFrame(
+        {'inaction': agent.qtable[:, 0], 'disengage': agent.qtable[:, 1], 'engage': agent.qtable[:, 2]})
+    print(df_learned_values)
     # file_name4 = folder_path + '/' + file_name + '_' + str(row) + '_learnedValue' '.csv'
     # df_learned_values.round(decimals=2).to_csv(file_name4)
     #
