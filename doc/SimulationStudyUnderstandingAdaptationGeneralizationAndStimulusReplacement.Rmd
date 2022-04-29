@@ -1,0 +1,53 @@
+---
+title: "Simulation Study: Understanding Adaptation Generalization and Stimulus Replacement"
+author: "Jonas Petter"
+date: "4/29/2022"
+output:
+  html_document:
+    toc: true
+    toc_depth: 6
+    toc_float: true
+    theme: united
+    fig_caption: false
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction
+
+In this simulation I investigated which effects the generalization of the reappraisal adaption to disengagement has. The long-term benefit of engagement comes from the adaptation effect it has on a stimulus. This adaptation effect can either apply only when engagement is used again, or also when disengagement is used. Also partial generalization is conceivable, thus when engagement is used the 2nd time, the stimulus intensity is `intensity - engage_adaptation` whereas, when a stimulus was engaged with once and then disengagement is used, it would be `intensity - engage_adaptation * X`, where `X` is the partial generalization factor. Another question this report investigates is the effect of stimulus replacement. Previously, the stimuli were hard-coded to be replaced after 5 occurrences. It would be interesting to understand what the effects of faster or slower replacement are.
+
+
+## Changes to the Code
+
+### Parameter for Adaptation Generalization
+
+I have added a parameter that determines how much of the effect of `engage_adaptation` also carries over when using disengagement.
+Previously, this parameter was implicitly set to 1, thus all adaptation effects carried over to all actions. Now, this parameter can be set to any value, but we would probably want to keep it between 0 and 1. 
+
+
+### Parameter for Stimulus Replacement
+
+I have added a parameter that determines after how many occurrences a stimulus is replaced. Every time a stimulus is sampled, this counts as one occurrence - independent of the chosen action.
+
+## Generalization Effects
+
+
+
+## Replacement Speed Effects
+
+
+
+
+## Interaction Effects
+
+## Conclusion
+
+
+
+

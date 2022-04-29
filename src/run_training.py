@@ -25,15 +25,15 @@ stream_handler = logging.StreamHandler(sys.stdout)
 formatter = logging.Formatter('%(message)s')
 stream_handler.setFormatter(formatter)
 logger.addHandler(stream_handler)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 #Parameters for grid search
 grid_parameters = {
-    'N_STIMULI': [2],
+    'N_STIMULI': [300],
     'alpha': [.1],
     'gamma': [.99],
     'epsilon': [1],
-    'disengage_benefit': [3],
+    'disengage_benefit': [7],
     'engage_benefit': [2],
     'engage_adaptation': [2],
     'SEED': [5]
@@ -71,7 +71,7 @@ for row in np.arange(0, len(grid)):
     disengage_benefit = grid[row, 4]
     engage_adaptation = grid[row, 6]
     engage_benefit = grid[row, 5]
-    adaptation_generalization = 0
+    adaptation_generalization = .1
 
     random.seed(SEED)
     np.random.seed(SEED)
@@ -113,7 +113,7 @@ for row in np.arange(0, len(grid)):
 
     # Run simulation
     for i in range(N_RUNS):
-        env.render()
+        #env.render()
         next_state, reward, done, info = env.step(action)
         next_state = bin_low_high(next_state)
         #print(state, next_state)
