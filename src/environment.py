@@ -79,6 +79,7 @@ class EmotionEnv(gym.Env):
                  engage_benefit: float,
                  disengage_benefit: float,
                  engage_adaptation: float,
+                 stimulus_max_occurrence: int,
                  stimuli: list,
                  agent_status: AgentStatus
                  ):
@@ -98,6 +99,7 @@ class EmotionEnv(gym.Env):
         self.agent_status = agent_status
         self.current_appraisal = None
         self.replacement_stimulus_counter = 0
+        self.stimulus_max_occurrence = stimulus_max_occurrence
 
     def step(self, action: int) -> tuple:
         '''
@@ -158,7 +160,7 @@ class EmotionEnv(gym.Env):
 
 # stimulus gets replaced with a new stimulus with the same probability of occurrence and intensity, but new id
     def refresh_stimuli_list(self):
-        if self.agent_status.current_encounter_counter == 5:
+        if self.agent_status.current_encounter_counter == self.stimulus_max_occurrence:
             id_to_remove = self.agent_status.current_id
             for j in range(0, len(self.stimuli)):
                 if self.stimuli[j].id == id_to_remove:

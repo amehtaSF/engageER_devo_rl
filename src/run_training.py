@@ -29,11 +29,11 @@ logger.setLevel(logging.INFO)
 
 #Parameters for grid search
 grid_parameters = {
-    'N_STIMULI': [300],
+    'N_STIMULI': [2],
     'alpha': [.1],
     'gamma': [.99],
     'epsilon': [1],
-    'disengage_benefit': [2],
+    'disengage_benefit': [3],
     'engage_benefit': [2],
     'engage_adaptation': [2],
     'SEED': [5]
@@ -58,6 +58,7 @@ for row in np.arange(0, len(grid)):
     N_STIMULI = int(grid[row, 0])
     N_ACTIONS = 3
     N_STATES = 3
+    STIMULUS_MAX_OCCURRENCE = 20
     STIMULUS_INT_MIN = 1
     STIMULUS_INT_MAX = 10
     DECAY_TIME = N_RUNS * .7    # How much of the total run is used for exploring
@@ -90,6 +91,7 @@ for row in np.arange(0, len(grid)):
     env = EmotionEnv(engage_benefit=engage_benefit,
                      disengage_benefit=disengage_benefit,
                      engage_adaptation=engage_adaptation,
+                     stimulus_max_occurrence=STIMULUS_MAX_OCCURRENCE,
                      stimuli=stimuli_list,
                      agent_status=agent_status
                      )
