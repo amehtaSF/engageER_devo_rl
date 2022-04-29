@@ -20,14 +20,14 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Introduction
 
-In this simulation I investigated how we can determine if the algorithm has converged to the optimal solution. It appears that there is no general answer to this problem. In qLearning, there is often a decay factor for the learning rate (alpha). It is then given that the algorithm has converged when alpha = 0. However, this simply turns the problem around to the question of which parameters for alpha and its decay rate lead to convergence to the optimal solution.
+In this simulation I investigated how we can determine if the algorithm has converged to the optimal solution. It appears that there is no general answer to this problem. In qLearning, there is often a decay factor for the learning rate (alpha). It is then given that the algorithm has converged when the learning rate has decayed fully, thus alpha = 0. However, this simply turns the problem around to the question of which parameters for alpha and the decay rate lead to convergence to the optimal solution.
 
-Another solution that is often suggested is setting a threshold for the size of the change that results from each update. If the values change by e.g., less than .0001 each iteration, the qTable could be considered converged. This, however, only works for deterministic environments. Our environment is stochastic, however, in that the future reward depends on the next stimulus that is sampled. The values thus continue to change, as also becomes clear from the simulation.
+Another solution that is often suggested is setting a threshold for the size of the change that results from each update. If the values change by e.g., less than .0001 each iteration, the qTable could be considered converged. This, however, only works for deterministic environments. Our environment is stochastic, however, in that the future reward depends on the next stimulus that is sampled. The values thus continue to change, as also becomes clear from the simulations in [Update Amount].
 
 
 ## qTable Values
 
-This simulation shows the final learned qTable of the agent after a different number of runs. This is to get some idea of how the values change as time goes on. To me it seems that the qTable does not converge to certain values, but continues to move around within a certain range. 
+This simulation shows the final learned qTable of the agent after a different number of runs. This is to get some idea of how the values change as time goes on. To me it seems that the qTable does not converge to certain values, but continues to move around within a certain range. Interesting to note is that the values for disengagement seem to be *higher* at times than the values of engagement, although engagement is the preferred action overall. This might be due to the randomness of the next stimulus and balance out in the long term.
 
 ```
 SEED = 123
@@ -92,7 +92,9 @@ engage_adaptation = 2
 
 ## Update Amount
 
-This simulation shows how the value by which the qTable is updated each iteration changes over time. This is calculated as the sum of the qTable at time step t, minus the sum of the qTable at time step t-1. If the qTable would approach a certain value, we would expect this updating value to become smaller over time. It does initially become smaller indeed, but then it continues to fluctuate within certain boundaries.
+This simulation shows how the value by which the qTable is updated each iteration changes over time. This is calculated as the sum of the qTable at time step t, minus the sum of the qTable at time step t-1. If the qTable would approach a certain value, we would expect this updating value to become smaller over time. It does initially become smaller indeed, but then it continues to fluctuate within certain boundaries. I see this as confirmation for the hypothesis that the qTable does never converge to a stable state.
+
+**NOTE:** The plots for the preferred actions show a continuous x-axis. But this still corresponds to the 0, 1 and 2 bins. Only the values at 0, 1 and 2 are thus relevant.
 
 ```
 SEED = 123
@@ -119,7 +121,11 @@ engage_adaptation = 2
 
 ![1](../plots/Convergence/30k-2.png)
 
+This plot shows the amount by which the qTable is updated each run. These values are sometimes negative and sometimes positive (should have probably plotted the absolute values), but they do not converge to 0, as we would expect if the qTable becomes stable.
+
 ![2](../plots/Convergence/30k.png)
+
+This plot shows the preferred action per intensity, with 3 bins for intensity 0, 1 (low) and 2 (high).
 
 ### N_RUNS = 60000
 
@@ -147,23 +153,9 @@ engage_adaptation = 2
 ![9](../plots/Convergence/300k-2.png)
 ![10](../plots/Convergence/300k.png)
 
-## Cutting off after initial learning
+## Conclusion
 
-
-
-### N_RUNS = 30000
-
-
-### N_RUNS = 60000
-
-
-### N_RUNS = 90000
-
-
-### N_RUNS = 150000
-
-
-### N_RUNS = 300000
+Based on the insight that the qTable does not converge to a fixed state, I think it is not possible to find a *hard* criterion for convergence. From "Preferred Action" plots in the [Update Amount] section, I am quite confident that we have reached convergence already after 30000 runs. There seems to be no change in the ratio of selected actions for the bins 1 and 2, even with up to 10x more runs. Only the ratio for bin 0 - at which all actions have the same value - continues to change.
 
 
 
