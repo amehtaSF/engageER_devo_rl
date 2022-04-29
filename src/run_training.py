@@ -25,7 +25,7 @@ stream_handler = logging.StreamHandler(sys.stdout)
 formatter = logging.Formatter('%(message)s')
 stream_handler.setFormatter(formatter)
 logger.addHandler(stream_handler)
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.DEBUG)
 
 #Parameters for grid search
 grid_parameters = {
@@ -71,6 +71,7 @@ for row in np.arange(0, len(grid)):
     disengage_benefit = grid[row, 4]
     engage_adaptation = grid[row, 6]
     engage_benefit = grid[row, 5]
+    adaptation_generalization = 0
 
     random.seed(SEED)
     np.random.seed(SEED)
@@ -91,6 +92,7 @@ for row in np.arange(0, len(grid)):
     env = EmotionEnv(engage_benefit=engage_benefit,
                      disengage_benefit=disengage_benefit,
                      engage_adaptation=engage_adaptation,
+                     adaptation_generalization=adaptation_generalization,
                      stimulus_max_occurrence=STIMULUS_MAX_OCCURRENCE,
                      stimuli=stimuli_list,
                      agent_status=agent_status
@@ -111,6 +113,7 @@ for row in np.arange(0, len(grid)):
 
     # Run simulation
     for i in range(N_RUNS):
+        env.render()
         next_state, reward, done, info = env.step(action)
         next_state = bin_low_high(next_state)
         #print(state, next_state)
@@ -120,7 +123,6 @@ for row in np.arange(0, len(grid)):
         logger.debug(f'action: {action}, reward: {reward}, step: {i}')
         if i % 100 == 0:
             print(row, '/', len(grid), '_____', round(i / (N_RUNS) * 100, 2) , '%', sep='')
-        #env.render()
         action_counts[state, action] += 1
         reward_counts[i, action] += reward
         state = bin_low_high(env.agent_status.current_emo_intensity)  # env.get_original_intensity(agent_status.current_id)
