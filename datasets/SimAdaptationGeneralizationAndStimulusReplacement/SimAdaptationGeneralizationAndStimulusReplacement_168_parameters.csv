@@ -1,0 +1,2 @@
+,SEED,N_RUNS,N_STIMULI,STIMULUS_INT_MIN,STIMULUS_INT_MAX,STIMULUS_MAX_OCCURRENCE,alpha,gamma,epsilon,disengage_benefit:,engage_benefit,engage_adaptation,adaptation_generalization
+0,4,60000,300,1,10,8,0.1,0.99,1.0,2.0,2.0,2.0,0.0
