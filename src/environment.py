@@ -8,12 +8,13 @@ from gym.spaces import Discrete, Tuple, Box, Dict
 
 class Stimulus:
 
-    def __init__(self, id: int, emo_intensity: int, p_occurrence: float):
+    def __init__(self, id: int, emo_intensity: int, p_occurrence: float, resolvable: bool):
         self.id = id
         self.emo_intensity = emo_intensity
         self.p_occurrence = p_occurrence
         self.encounter_counter = 0
         self.reappraisal_counter = 0
+        self.resolvable = resolvable
 
     def get_intensity(self):
         return self.emo_intensity
@@ -24,7 +25,7 @@ class Stimulus:
     def get_dict(self):
         return {'id': self.id, 'emo_intensity': self.emo_intensity, "p_occurrence": self.p_occurrence,
                 'reappraisals': self.reappraisal_counter,
-                'encounters': self.encounter_counter}
+                'encounters': self.encounter_counter, 'resolvable': self.resolvable}
 
 
 class AgentStatus:
@@ -76,7 +77,6 @@ class EmotionEnv(gym.Env):
                  engage_benefit: float,
                  disengage_benefit: float,
                  engage_adaptation: float,
-                 adaptation_generalization: float,
                  stimulus_max_occurrence: int,
                  stimuli: list,
                  agent_status: AgentStatus
@@ -98,7 +98,6 @@ class EmotionEnv(gym.Env):
         self.current_appraisal = None
         self.replacement_stimulus_counter = 0
         self.stimulus_max_occurrence = stimulus_max_occurrence
-        self.adaptation_generalization = adaptation_generalization
 
     def step(self, action: int) -> tuple:
         '''
@@ -134,18 +133,20 @@ class EmotionEnv(gym.Env):
         return self.agent_status
 
     def _disengage(self):
-        self.agent_status.current_emo_intensity -= self.disengage_benefit + (
-                    self.current_appraisal.reappraisal_counter * self.engage_adaptation * self.adaptation_generalization)
+        self.agent_status.current_emo_intensity -= self.disengage_benefit
         self.agent_status.current_emo_intensity = np.clip(self.agent_status.current_emo_intensity, 0, 10)
         return self.agent_status
 
     def _engage(self):
-        self.agent_status.current_emo_intensity -= self.engage_benefit + (
-                    self.current_appraisal.reappraisal_counter * self.engage_adaptation)
-        # self.current_appraisal.emo_intensity -= self.engage_adaptation
-        # self.current_appraisal.emo_intensity = np.clip(self.current_appraisal.emo_intensity, 0, 10)
-        self.current_appraisal.reappraisal_counter += 1
+        if self.current_appraisal.resolvable:
+            self.agent_status.current_emo_intensity -= self.engage_benefit
+            self.current_appraisal.emo_intensity -= self.engage_adaptation
+            self.current_appraisal.reappraisal_counter += 1
+        else:
+            self.agent_status.current_emo_intensity -= self.engage_benefit + (self.current_appraisal.reappraisal_counter * self.engage_adaptation)
+            self.current_appraisal.reappraisal_counter += 1
         self.agent_status.current_emo_intensity = np.clip(self.agent_status.current_emo_intensity, 0, 10)
+        self.current_appraisal.emo_intensity = np.clip(self.current_appraisal.emo_intensity, 0, 10)
         return self.agent_status
 
     def _get_reward(self):
@@ -155,8 +156,6 @@ class EmotionEnv(gym.Env):
     def reset(self):
         probs = np.array([stimulus.get_p_occurrence() for stimulus in self.stimuli]).flatten()
         new_stimulus = np.random.choice(self.stimuli, p=probs)
-        # while new_stimulus.id == self.agent_status.current_id:
-        #     new_stimulus = np.random.choice(self.stimuli, p=probs)
         self.agent_status.appraise_stimuli(new_stimulus)
 
     # stimulus gets replaced with a new stimulus with the same probability of occurrence and intensity, but new id
@@ -168,7 +167,7 @@ class EmotionEnv(gym.Env):
                     new_id = len(self.stimuli) + self.replacement_stimulus_counter
                     self.replacement_stimulus_counter += 1
                     self.stimuli[j] = Stimulus(id=new_id, emo_intensity=self.stimuli[j].emo_intensity,
-                                               p_occurrence=self.stimuli[j].p_occurrence)
+                                               p_occurrence=self.stimuli[j].p_occurrence, resolvable=self.stimuli[j].resolvable)
 
     def get_original_intensity(self, stimulus_id):
         for i in range(0, len(self.agent_status.stimuliAppraisals)):

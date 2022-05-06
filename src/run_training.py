@@ -31,32 +31,32 @@ logger.setLevel(logging.INFO)
 #Parameters for grid search
 grid_parameters = {
     'N_STIMULI': [300],
-    'STIMULUS_MAX_OCCURRENCE': [1],
+    'STIMULUS_MAX_OCCURRENCE': [5],
     'alpha': [.1],
     'gamma': [.99],
     'epsilon': [1],
     'disengage_benefit': [2],   
     'engage_benefit': [2],
     'engage_adaptation': [2],
-    'adaptation_generalization': [1],
-    'SEED': np.arange(1, 31)
+    'SEED': [123],
+    'PERCENTAGE_RESOLVABLE_STIMULI': [1]    # 0 to 1
 }
 
 n_grid_parameters = len(grid_parameters)
 grid = np.array(np.meshgrid(grid_parameters['N_STIMULI'], grid_parameters['STIMULUS_MAX_OCCURRENCE'], grid_parameters['alpha'],
                             grid_parameters['gamma'], grid_parameters['epsilon'], grid_parameters['disengage_benefit'],
-                            grid_parameters['engage_benefit'], grid_parameters['engage_adaptation'], grid_parameters['adaptation_generalization'],
-                            grid_parameters['SEED']))
+                            grid_parameters['engage_benefit'], grid_parameters['engage_adaptation'], grid_parameters['SEED'],
+                            grid_parameters['PERCENTAGE_RESOLVABLE_STIMULI']))
 grid = grid.reshape(n_grid_parameters, int(grid.size/n_grid_parameters)).T
 
-file_name = "ConfirmMaxOccurenceOne"      # the first part of the file name, automatically appended with the respective simulation value and data description
-                                    #DONT USE NUMBERS IN FILE NAME
-folder_path = "../datasets/" + file_name   # where to save the data
-os.makedirs(folder_path)     # create a folder
+# file_name = "ConfirmMaxOccurenceOne"      # the first part of the file name, automatically appended with the respective simulation value and data description
+#                                     #DONT USE NUMBERS IN FILE NAME
+# folder_path = "../datasets/" + file_name   # where to save the data
+# os.makedirs(folder_path)     # create a folder
 
 for row in np.arange(0, len(grid)):
 
-    SEED = int(grid[row, 9])
+    SEED = int(grid[row, 8])
     N_RUNS = 60000
     N_STIMULI = int(grid[row, 0])
     N_ACTIONS = 3
@@ -65,6 +65,7 @@ for row in np.arange(0, len(grid)):
     STIMULUS_INT_MIN = 1
     STIMULUS_INT_MAX = 10
     DECAY_TIME = N_RUNS * .7    # How much of the total run is used for exploring
+    PERCENTAGE_RESOLVABLE_STIMULI = grid[row, 9]
 
     alpha = grid[row, 2]
     gamma = grid[row, 3]
@@ -72,30 +73,31 @@ for row in np.arange(0, len(grid)):
     DECAY_FACTOR = epsilon/DECAY_TIME  # how much epsilon is lowered each step
 
     disengage_benefit = grid[row, 5]
-    engage_adaptation = int(grid[row, 7])
+    engage_adaptation = grid[row, 7]
     engage_benefit = grid[row, 6]
-    adaptation_generalization = grid[row, 8]
 
     random.seed(SEED)
     np.random.seed(SEED)
 
     stimuli_list = []
+    resolvable_ids = np.random.choice(range(N_STIMULI), size=int(N_STIMULI * PERCENTAGE_RESOLVABLE_STIMULI),
+                                      replace=False)
     for i in range(N_STIMULI):
         id = i
         emo_intensity = np.random.randint(STIMULUS_INT_MIN, STIMULUS_INT_MAX + 1)
         p_occurrence = np.random.uniform(0, 1, 1)
-        stimuli_list.append(Stimulus(id=id, emo_intensity=emo_intensity, p_occurrence=p_occurrence))
+        stimuli_list.append(Stimulus(id=id, emo_intensity=emo_intensity, p_occurrence=p_occurrence, resolvable=(i in resolvable_ids)))
 
     p_sum = sum(stimulus.p_occurrence for stimulus in stimuli_list)
     for stimulus in stimuli_list:
         stimulus.p_occurrence = stimulus.p_occurrence / p_sum
+
 
     agent_status = AgentStatus()
 
     env = EmotionEnv(engage_benefit=engage_benefit,
                      disengage_benefit=disengage_benefit,
                      engage_adaptation=engage_adaptation,
-                     adaptation_generalization=adaptation_generalization,
                      stimulus_max_occurrence=STIMULUS_MAX_OCCURRENCE,
                      stimuli=stimuli_list,
                      agent_status=agent_status
@@ -103,8 +105,6 @@ for row in np.arange(0, len(grid)):
     env.reset()
 
     agent = QTableAgent(N_STATES, n_actions=N_ACTIONS, alpha=alpha, gamma=gamma, epsilon=epsilon)
-
-
 
     action = 0 # the first action
     state = bin_low_high(env.agent_status.current_emo_intensity)    #the first state
@@ -200,13 +200,13 @@ for row in np.arange(0, len(grid)):
     plt.plot(states, action_counts[:, 1], marker='', color='blue', linewidth=2, label='disengage')
     plt.plot(states, action_counts[:, 2], marker='', color='red', linewidth=2, label='engage')
     plt.legend()
-    #plt.show()
+    plt.show()
 
 
     # plot qTable update amount
     time = np.arange(0, N_RUNS)
     plt.plot(time, qTable_update_amount, marker='', color='olive', linewidth=2)
-    #plt.show()
+    plt.show()
 
 
     # plot rewards
@@ -226,25 +226,24 @@ for row in np.arange(0, len(grid)):
 
 
 
-    #set options for pandas
-    pd.set_option('display.max_columns', None)
-    pd.set_option('display.width', None)
-    pd.set_option('display.max_colwidth', None)
-
-    # to write parameters to csv
-    df_parameters = pd.DataFrame({'SEED': SEED, 'N_RUNS': N_RUNS, 'N_STIMULI': N_STIMULI, 'STIMULUS_INT_MIN': STIMULUS_INT_MIN,
-                                  'STIMULUS_INT_MAX': STIMULUS_INT_MAX, 'STIMULUS_MAX_OCCURRENCE': STIMULUS_MAX_OCCURRENCE,
-                                  'alpha': alpha, 'gamma': gamma, 'epsilon': epsilon, 'disengage_benefit:': disengage_benefit,
-                                  'engage_benefit': engage_benefit, 'engage_adaptation': engage_adaptation,
-                                  'adaptation_generalization': adaptation_generalization,}, index=[0])
-    file_name0 = folder_path + '/' + file_name + '_' + str(row) + '_parameters' '.csv'
-    df_parameters.to_csv(file_name0)
+    # #set options for pandas
+    # pd.set_option('display.max_columns', None)
+    # pd.set_option('display.width', None)
+    # pd.set_option('display.max_colwidth', None)
     #
-    #
-    # #to write the actions to csv
-    df1 = pd.DataFrame({'inaction': action_counts[:, 0], 'disengage': action_counts[:, 1], 'engage': action_counts[:, 2]})
-    file_name1 = folder_path + '/' + file_name + '_' + str(row) + '_actionPerIntensity' '.csv'
-    df1.to_csv(file_name1)
+    # # to write parameters to csv
+    # df_parameters = pd.DataFrame({'SEED': SEED, 'N_RUNS': N_RUNS, 'N_STIMULI': N_STIMULI, 'STIMULUS_INT_MIN': STIMULUS_INT_MIN,
+    #                               'STIMULUS_INT_MAX': STIMULUS_INT_MAX, 'STIMULUS_MAX_OCCURRENCE': STIMULUS_MAX_OCCURRENCE,
+    #                               'alpha': alpha, 'gamma': gamma, 'epsilon': epsilon, 'disengage_benefit:': disengage_benefit,
+    #                               'engage_benefit': engage_benefit, 'engage_adaptation': engage_adaptation}, index=[0])
+    # file_name0 = folder_path + '/' + file_name + '_' + str(row) + '_parameters' '.csv'
+    # df_parameters.to_csv(file_name0)
+    # #
+    # #
+    # # #to write the actions to csv
+    # df1 = pd.DataFrame({'inaction': action_counts[:, 0], 'disengage': action_counts[:, 1], 'engage': action_counts[:, 2]})
+    # file_name1 = folder_path + '/' + file_name + '_' + str(row) + '_actionPerIntensity' '.csv'
+    # df1.to_csv(file_name1)
 
 
     # #To write the rewards to csv
